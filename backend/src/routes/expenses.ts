@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
 import { zValidator } from '@hono/zod-validator'
+import { auth } from '../lib/auth'
 
 const FakeExpenses: Expense[] = [
     {id: 1, title: 'Expense 1', amount: 100},
@@ -16,8 +17,15 @@ const expenseSchema = z.object({ // for runtime validation
 const createExpenseSchema = expenseSchema.omit({id: true})
 type Expense = z.infer<typeof expenseSchema>
 
-export const expensesRoute = new Hono()
+export const expensesRoute = new Hono<{
+	Variables: {
+		user: typeof auth.$Infer.Session.user | null;
+		session: typeof auth.$Infer.Session.session | null
+	}
+}>()
 .get('/', (c) => {
+    const user = c.get('user')
+    console.log(user)
     return c.json({
         expenses: FakeExpenses
     })

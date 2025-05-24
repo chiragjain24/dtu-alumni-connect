@@ -11,7 +11,8 @@ function App() {
         throw new Error('Failed to fetch expenses')
       }
       return res.json()
-    }
+    },
+    refetchOnWindowFocus: false,
   })
 
   if(isPending) return <div>Loading...</div>

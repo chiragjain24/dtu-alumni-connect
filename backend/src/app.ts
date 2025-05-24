@@ -2,15 +2,36 @@ import { Hono } from 'hono'
 import { logger } from 'hono/logger'
 import { expensesRoute } from './routes/expenses'
 import { cors } from 'hono/cors'
+import { auth } from './lib/auth'
 // import { HTTPException } from 'hono/http-exception'
 
-const app = new Hono().basePath('/api')
+const app = new Hono<{
+	Variables: {
+		user: typeof auth.$Infer.Session.user | null;
+		session: typeof auth.$Infer.Session.session | null
+	}
+}>().basePath('/api')
 
 app.use('*', cors({
   origin: 'http://localhost:5173', // allow Vite frontend
 }))
 app.use('*', logger())
 
+
+// Auth Middleware(Calls Database to verify session or use cookie cache)
+app.use("*", async (c, next) => {
+	const session = await auth.api.getSession({ headers: c.req.raw.headers });
+  	if (!session) {
+    	c.set("user", null);
+    	c.set("session", null);
+    	return next();
+  	}
+  	c.set("user", session.user);
+  	c.set("session", session.session);
+  	return next();
+});
+
+app.on(["POST", "GET"], "/auth/**", (c) => auth.handler(c.req.raw));
 
 // app.onError((err, c) => {
 //   if(err instanceof HTTPException) {
