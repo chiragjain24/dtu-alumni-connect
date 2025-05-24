@@ -1,0 +1,58 @@
+---
+description: Frontend Architecture
+globs: 
+alwaysApply: false
+---
+# Frontend Architecture - React Twitter Clone
+
+## File Structure
+The frontend follows a Twitter-inspired component architecture:
+
+```
+frontend/src/
+├── components/          # Reusable UI components
+│   ├── ui/              # Base UI components (Shadcn UI)
+│   ├── layout/          # Layout components (Sidebar)
+│   ├── tweet/           # Tweet-related components
+│   ├── profile/         # Profile components
+│   └── common/          # Common components
+├── pages/               # All routes and their components in nested manner (mimic folder based routing)
+├── hooks/               # Custom React hooks
+├── lib/                 # Utilities and configurations
+├── types/               # TypeScript type definitions
+└── assets/              # Static assets
+```
+
+## Key Frontend Files
+- [App.tsx](mdc:frontend/src/App.tsx) - Main application component with routing
+- [main.tsx](mdc:frontend/src/main.tsx) - Application entry point
+- [index.css](mdc:frontend/src/index.css) - Global styles and TailwindCSS
+- [package.json](mdc:frontend/package.json) - Frontend dependencies
+- [vite.config.ts](mdc:frontend/vite.config.ts) - Vite configuration
+- [components.json](mdc:frontend/components.json) - Shadcn/UI configuration
+
+## Component Guidelines
+1. **Twitter UI Components**: Mirror Twitter's component structure
+   - TweetCard, TweetComposer, TweetThread
+   - Sidebar, Timeline
+
+2. **State Management**: 
+   - Use TanStack Query for server state
+   - Use Zustand for client state
+
+3. **Styling Approach**:
+   - Use Shadcn UI + Tailwind for Twitter-like styling
+   - Dark/Light theme support like Twitter
+
+4. **Authentication Flow**:
+   - Better-Auth integration
+   - Protected routes for authenticated users
+
+5. **Backend API**:
+   - Use Hono RPC
+
+## Design System
+- **Colors**: Twitter's exact color palette
+- **Typography**: Twitter's font stack and sizes
+- **Spacing**: Twitter's consistent spacing system
+- **Icons**: Lucide React icons styled like Twitter icons

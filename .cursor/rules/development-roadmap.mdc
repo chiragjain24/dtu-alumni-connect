@@ -1,0 +1,361 @@
+---
+description: Development Roadmap
+globs: 
+alwaysApply: false
+---
+# Development Roadmap - DTU Alumni Connect
+
+## Overview
+This roadmap breaks down the DTU Alumni Connect development into testable phases. Each phase builds on the previous one and produces visible results in the browser.
+
+## Current Status
+✅ **Foundation Setup Complete**
+- Root workspace with [package.json](mdc:package.json) 
+- Frontend: React 19 + TypeScript + Vite + TanStack Query
+- Backend: Hono + TypeScript + Better-Auth setup
+- Basic API structure in [backend/src/app.ts](mdc:backend/src/app.ts)
+- Frontend-backend connection working (expense test route)
+
+---
+
+## Phase 1: Authentication & User System (Week 1)
+**Goal**: Complete user authentication and registration system
+
+### Backend Tasks
+1. **Database Schema Setup**
+   - Create users table with alumni-specific fields
+   - Set up Drizzle migrations
+   - Configure Better-Auth with DTU email validation
+
+2. **Auth API Routes**
+   - `/api/auth/login` - Login functionality  
+   - `/api/auth/profile` - Get current user profile
+   - `/api/auth/logout` - Logout functionality
+
+3. **User Profile API**
+   - `/api/users/profile` - Get/Update user profile
+   - `/api/users/:id` - Get public user profile
+
+### Frontend Tasks
+1. **Auth Pages**
+   - Login page with only Google Provider (`/login`)
+   - Profile setup page (`/profile/setup`)
+
+2. **Auth Components**
+   - LoginForm component
+   - AuthGuard for protected routes
+
+3. **User State Management**
+   - TanStack Query setup for user data
+   - Zustand store for user authentication state
+
+### Testable Results
+- User can login with Google Oauth
+- User can logout
+- Protected routes redirect to login
+- User profile page displays correctly
+
+---
+
+## Phase 2: Basic Twitter UI & Layout (Week 2)
+**Goal**: Twitter-like interface and navigation
+
+### Frontend Tasks
+1. **Core Layout Components**
+   - `Sidebar` component with Twitter-like navigation
+   - `TopBar` component with logo and user menu
+   - `MainLayout` component structure
+
+2. **Pages Structure**
+   - Home/Timeline page (`/`)
+   - Profile page (`/profile/:username`)
+   - Settings page (`/settings`)
+
+3. **UI Components (Shadcn + Custom)**
+   - `TweetCard` component (skeleton)
+   - `UserCard` component
+   - `Button`, `Input`, `Avatar` components
+   - Twitter-like color scheme and styling
+
+4. **Responsive Design**
+   - Mobile-first approach
+   - Sidebar collapse on mobile
+   - Grid layouts for different screen sizes
+
+### Testable Results
+- Twitter-like interface loads
+- Navigation between pages works
+- Responsive design on mobile/desktop
+- User can see their profile page
+
+---
+
+## Phase 3: Tweet System Core (Week 3)
+**Goal**: Basic tweet creation, display, and timeline
+
+### Backend Tasks
+1. **Tweet Database Schema**
+   - Create tweets table
+   - Set up proper relationships
+   - Database migrations
+
+2. **Tweet API Routes**
+   - `POST /api/tweets` - Create new tweet
+   - `GET /api/tweets` - Get timeline tweets
+   - `GET /api/tweets/:id` - Get single tweet
+   - `DELETE /api/tweets/:id` - Delete tweet
+   - `GET /api/users/:id/tweets` - Get user tweets
+
+3. **Timeline Logic**
+   - Algorithm for home timeline
+   - Pagination support
+   - Performance optimization
+
+### Frontend Tasks
+1. **Tweet Components**
+   - `TweetComposer` - Create new tweets
+   - `TweetCard` - Display individual tweets
+   - `Timeline` - List of tweets
+   - `TweetDetail` - Single tweet view
+
+2. **Tweet Pages**
+   - Home timeline (`/`)
+   - Tweet detail page (`/tweet/:id`)
+   - User tweets on profile page
+
+3. **Real-time Updates**
+   - Optimistic updates for new tweets
+   - Auto-refresh timeline
+   - Tweet character counter
+
+### Testable Results
+- User can create tweets
+- Timeline displays tweets
+- Real-time tweet updates
+- User profile shows their tweets
+
+---
+
+## Phase 4: Social Interactions (Week 4)
+**Goal**: Likes, retweets, replies, and follows
+
+### Backend Tasks
+1. **Interaction Database Schema**
+   - Likes table
+   - Retweets table  
+   - Follows table
+   - Update tweet stats
+
+2. **Interaction API Routes**
+   - `POST /api/tweets/:id/like` - Like/unlike tweet
+   - `POST /api/tweets/:id/retweet` - Retweet functionality
+   - `POST /api/tweets/:id/reply` - Reply to tweet
+   - `POST /api/users/:id/follow` - Follow/unfollow user
+   - `GET /api/users/:id/followers` - Get followers
+   - `GET /api/users/:id/following` - Get following
+
+### Frontend Tasks
+1. **Interaction Components**
+   - Like button with animation
+   - Retweet button and modal
+   - Reply button and composer
+   - Follow/unfollow button
+
+2. **Thread System**
+   - Reply threads display
+   - Thread navigation
+   - Quote tweets
+
+3. **Social Features**
+   - Following/followers lists
+   - Notifications (basic)
+
+### Testable Results
+- Users can like/unlike tweets
+- Retweet functionality works
+- Reply threads display correctly
+- Follow/unfollow system functional
+
+---
+
+## Phase 5: Alumni-Specific Features (Week 5)
+**Goal**: DTU-specific networking features
+
+### Backend Tasks
+1. **Alumni Data Enhancement**
+   - Batch/year filtering
+   - Branch/department data
+   - Company and role tracking
+   - Alumni verification system
+
+2. **Alumni API Routes**
+   - `GET /api/alumni/batch/:year` - Get alumni by batch
+   - `GET /api/alumni/branch/:branch` - Get alumni by branch
+   - `GET /api/alumni/company/:company` - Get alumni by company
+   - `POST /api/alumni/verify` - Alumni verification
+
+### Frontend Tasks
+1. **Alumni Features**
+   - Batch-wise alumni directory
+   - Branch-wise networking
+   - Company connections
+   - Alumni verification badge
+
+2. **Enhanced Profiles**
+   - Graduation year display
+   - Current company/role
+   - Alumni verification status
+   - LinkedIn integration
+
+3. **Networking Tools**
+   - Find alumni by company
+   - Batch reunion features
+   - Department-wise groups
+
+### Testable Results
+- Alumni can find batch-mates
+- Company-based networking works
+- Enhanced profiles with DTU info
+- Alumni verification system
+
+---
+
+## Phase 6: Job Board & Referrals (Week 6)
+**Goal**: Job posting and referral system
+
+### Backend Tasks
+1. **Job Schema**
+   - Jobs table with company, role, requirements
+   - Job applications tracking
+   - Referral system
+
+2. **Job API Routes**
+   - `POST /api/jobs` - Create job posting
+   - `GET /api/jobs` - Get job listings
+   - `POST /api/jobs/:id/apply` - Apply to job
+   - `POST /api/jobs/:id/refer` - Refer someone
+
+### Frontend Tasks
+1. **Job Components**
+   - Job posting form
+   - Job listing cards
+   - Job detail page
+   - Application tracking
+
+2. **Job Board Pages**
+   - Jobs listing page (`/jobs`)
+   - Job detail page (`/jobs/:id`)
+   - My applications page (`/applications`)
+
+### Testable Results
+- Alumni can post jobs
+- Job board displays opportunities
+- Application system works
+- Referral system functional
+
+---
+
+## Phase 7: Real-time Chat & Messaging (Week 7)
+**Goal**: Direct messaging between alumni
+
+### Backend Tasks
+1. **Chat Infrastructure**
+   - WebSocket setup with Hono
+   - Messages database schema
+   - Real-time message delivery
+
+2. **Chat API Routes**
+   - `GET /api/chats` - Get user conversations
+   - `POST /api/chats/:id/messages` - Send message
+   - WebSocket endpoints for real-time
+
+### Frontend Tasks
+1. **Chat Components**
+   - Chat list sidebar
+   - Message bubbles
+   - Chat input with emoji
+   - Online status indicators
+
+2. **Chat Pages**
+   - Messages page (`/messages`)
+   - Individual chat view
+   - New conversation starter
+
+### Testable Results
+- Real-time messaging works
+- Chat history persists
+- Online status indicators
+- Message notifications
+
+---
+
+## Phase 8: Advanced Features & Polish (Week 8)
+**Goal**: Performance optimization and advanced features
+
+### Features
+1. **Advanced UI**
+   - Dark/light theme toggle
+   - Advanced search functionality
+   - Trending topics
+   - Bookmark system
+
+2. **Performance**
+   - Image optimization
+   - Infinite scrolling
+   - Caching strategies
+   - Loading states
+
+3. **Alumni Events**
+   - Event creation and management
+   - Event RSVP system
+   - Calendar integration
+
+### Testable Results
+- Smooth, performant interface
+- Advanced search works
+- Event system functional
+- Theme switching works
+
+---
+
+## Development Commands Per Phase
+
+### Start Development
+```bash
+# Terminal 1 - Backend
+bun run dev
+
+# Terminal 2 - Frontend  
+bun run devf
+```
+
+### Database Operations
+```bash
+# Generate migration
+cd backend && bun run db:generate
+
+# Run migration
+cd backend && bun run db:migrate
+
+# Reset database (if needed)
+cd backend && bun run db:reset
+```
+
+### Testing Each Phase
+1. **Manual Testing**: Use browser to test features
+2. **API Testing**: Use Postman/Thunder Client
+3. **Database Verification**: Check data in PostgreSQL
+
+---
+
+## Success Metrics Per Phase
+- **Phase 1**: Authentication flow complete
+- **Phase 2**: Twitter-like UI renders correctly
+- **Phase 3**: Tweet CRUD operations work
+- **Phase 4**: Social interactions functional
+- **Phase 5**: Alumni networking features work
+- **Phase 6**: Job board fully operational
+- **Phase 7**: Real-time chat working
+- **Phase 8**: Production-ready application
+
+Each phase should be fully functional before moving to the next one.

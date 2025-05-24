@@ -1,0 +1,64 @@
+---
+description: Backend Architecture
+globs: 
+alwaysApply: false
+---
+# Backend Architecture - Hono API for Twitter Clone
+
+## File Structure
+The backend uses Hono framework with a clean API architecture:
+
+```
+backend/src/
+├── app.ts               # Main Hono application setup
+├── index.ts             # Server entry point
+├── routes/              # API route handlers
+│   ├── auth.ts          # Authentication routes
+│   ├── tweets.ts        # Tweet CRUD operations
+│   ├── users.ts         # User profile management
+│   ├── follows.ts       # Follow/unfollow operations
+│   └── alumni.ts        # Alumni-specific features
+├── db/                  # Database layer
+│   ├── schema/          # Drizzle schema definitions
+│   ├── migrations/      # Database migrations
+│   └── queries.ts       # Reusable database queries
+├── lib/                 # Utilities and configurations
+│   ├── auth.ts          # Better-Auth configuration
+│   ├── db.ts            # Database connection
+│   └── validation.ts    # Zod schemas
+└── types/               # TypeScript types
+```
+
+## Key Backend Files
+- [app.ts](mdc:backend/src/app.ts) - Main Hono application with middleware
+- [index.ts](mdc:backend/src/index.ts) - Server startup and configuration
+- [package.json](mdc:backend/package.json) - Backend dependencies
+- [drizzle.config.ts](mdc:backend/drizzle.config.ts) - Database configuration
+- [tsconfig.json](mdc:backend/tsconfig.json) - TypeScript configuration
+
+## API Design Principles
+1. **RESTful Routes**: Follow Twitter API patterns
+   - `GET /api/tweets` - Get timeline tweets
+   - `POST /api/tweets` - Create new tweet
+   - `POST /api/tweets/:id/like` - Like/unlike tweet
+   - `POST /api/tweets/:id/retweet` - Retweet functionality
+   - `GET /api/users/:id` - Get user profile
+
+2. **Authentication**: Better-Auth integration
+   - Role-based access (alumni, admin)
+
+3. **Database Schema**: Alumni-focused Twitter data model
+   - Users (with DTU-specific fields: graduation_year, branch, current_role)
+   - Tweets (with alumni networking context)
+   - Follows (alumni connections)
+   - Alumni-specific tables (batches, departments, events)
+
+4. **Validation**: Zod schemas for all request/response data
+   - Type-safe API contracts
+   - Runtime validation
+   - Error handling with proper HTTP status codes
+
+## Performance & Scalability
+- **Database**: PostgreSQL with proper indexing
+- **Rate Limiting**: Prevent spam and abuse
+- **File Uploads**: Handle profile pictures and media tweets

@@ -1,0 +1,118 @@
+---
+description: Database Schema
+globs: 
+alwaysApply: false
+---
+# Database Schema - Alumni Twitter Clone
+
+## Core Schema Design
+The database schema is designed to support Twitter-like functionality with alumni networking features.
+
+## Database Configuration
+- [drizzle.config.ts](mdc:backend/drizzle.config.ts) - Drizzle ORM configuration
+- Database: PostgreSQL (Neon serverless)
+- ORM: Drizzle with TypeScript support
+- Migrations: Located in `backend/src/db/migrations/`
+
+## Core Tables
+
+### 1. Users Table (Alumni Profiles)
+```sql
+users {
+  id: uuid (primary key)
+  email: string (unique)
+  username: string (unique, Twitter-style handle)
+  display_name: string
+  bio: text
+  avatar_url: string?
+  banner_url: string?
+  location: string?
+  website: string?
+  verified: boolean (alumni verification)
+  
+  -- Alumni-specific fields
+  graduation_year: integer
+  branch: enum (CSE, ECE, IT, COE, etc.)
+  current_role: string
+  company: string?
+  linkedin_url: string?
+  
+  -- Twitter-like stats
+  followers_count: integer (default 0)
+  following_count: integer (default 0)
+  tweets_count: integer (default 0)
+  
+  created_at: timestamp
+  updated_at: timestamp
+}
+```
+
+### 2. Tweets Table
+```sql
+tweets {
+  id: uuid (primary key)
+  author_id: uuid (foreign key -> users.id)
+  content: text (280 char limit)
+  media_urls: string[]?
+  
+  -- Thread support
+  reply_to_id: uuid? (foreign key -> tweets.id)
+  thread_id: uuid? (for grouping thread tweets)
+  
+  -- Engagement metrics
+  likes_count: integer (default 0)
+  retweets_count: integer (default 0)
+  replies_count: integer (default 0)
+  
+  -- Alumni-specific
+  is_job_post: boolean (default false)
+  
+  created_at: timestamp
+  updated_at: timestamp
+}
+```
+
+### 3. Follows Table
+```sql
+follows {
+  id: uuid (primary key)
+  follower_id: uuid (foreign key -> users.id)
+  following_id: uuid (foreign key -> users.id)
+  created_at: timestamp
+  
+  -- Composite unique constraint on (follower_id, following_id)
+}
+```
+
+### 4. Likes Table
+```sql
+likes {
+  id: uuid (primary key)
+  user_id: uuid (foreign key -> users.id)
+  tweet_id: uuid (foreign key -> tweets.id)
+  created_at: timestamp
+  
+  -- Composite unique constraint on (user_id, tweet_id)
+}
+```
+
+### 5. Retweets Table
+```sql
+retweets {
+  id: uuid (primary key)
+  user_id: uuid (foreign key -> users.id)
+  tweet_id: uuid (foreign key -> tweets.id)
+  quote_content: text? (for quote tweets)
+  created_at: timestamp
+  
+  -- Composite unique constraint on (user_id, tweet_id)
+}
+```
+
+
+## Indexing Strategy
+- Users: email, username, graduation_year, branch
+- Tweets: author_id, created_at, reply_to_id
+- Follows: follower_id, following_id
+- Likes: user_id, tweet_id
+- Performance indexes for timeline queries

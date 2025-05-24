@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "cd backend && bun run dev",
     "devf": "cd frontend && bun run dev",
-    "install:f": "cd frontend && pnpm install",
+    "install:f": "cd frontend && bun install",
     "install:b": "cd backend && bun install"
   },
   "workspaces": [

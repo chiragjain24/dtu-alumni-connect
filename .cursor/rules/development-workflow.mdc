@@ -1,0 +1,46 @@
+---
+description: Development Workflow
+globs: 
+alwaysApply: false
+---
+# Development Workflow - DTU Alumni Connect
+
+## Development Environment Setup
+1. **Prerequisites**: Bun runtime, PostgreSQL (or Neon account)
+2. **Installation**: Run from project root
+   ```bash
+   bun install           # Install root dependencies
+   bun run install:f     # Install frontend dependencies  
+   bun run install:b     # Install backend dependencies
+   ```
+
+## Development Commands
+- **Frontend**: `bun run devf` - Start Vite dev server
+- **Backend**: `bun run dev` - Start Hono server with hot reload
+- **Database**: 
+  - `cd backend && bun run db:generate` - Generate migrations
+  - `cd backend && bun run db:migrate` - Run migrations
+
+## Project Configuration Files
+- [package.json](mdc:package.json) - Root workspace configuration
+- [bun.lock](mdc:bun.lock) - Dependency lock file
+- [.gitignore](mdc:.gitignore) - Git ignore patterns
+
+## Development Guidelines
+
+### 1. Feature Development Process
+1. **Database First**: Create/update Drizzle schema
+2. **API Second**: Implement Hono routes with Zod validation
+3. **Frontend Last**: Build React components with TanStack Query
+4. **Test Integration**: Ensure frontend-backend communication
+
+### 2. Code Style & Conventions
+- **TypeScript**: Strict mode enabled, no `any` types
+- **Naming**: camelCase for variables, PascalCase for components
+- **File Structure**: Co-locate related files, use barrel exports
+- **Comments**: Document complex business logic
+
+### 4. Environment Variables
+- **Backend**: Use `.env.local`
+- **Frontend**: Use `.env.local`
+- **Security**: Never commit secrets, use environment files

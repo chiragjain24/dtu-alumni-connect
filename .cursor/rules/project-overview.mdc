@@ -1,0 +1,38 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# DTU Alumni Connect - Twitter Clone for Alumni Networking
+
+## Project Overview
+DTU Alumni Connect is a full-stack Twitter clone specifically designed for DTU (Delhi Technological University) alumni networking. The project replicates Twitter's interface and functionality rather than LinkedIn's professional networking approach.
+
+## Tech Stack
+- **Frontend**: React 19 + TypeScript + Vite + Shadcn UI + Tanstack Query + Zustand + TailwindCSS
+- **Backend**: Bun + Hono + TypeScript + Drizzle ORM + PostgreSQL (Neon)
+- **Authentication**: Better-Auth (shared between frontend and backend)
+- **Database**: PostgreSQL with Drizzle ORM migrations
+- **Package Manager**: Bun (for faster performance)
+- **Validation**: Zod schemas
+- **Styling**: Shadcn UI + TailwindCSS for Twitter-like design
+
+## Project Structure
+```
+dtu-alumni/
+├── frontend/          # React frontend application
+├── backend/           # Hono API backend
+├── package.json       # Root workspace configuration
+└── .cursor/rules/     # Cursor AI rules and guidelines
+```
+
+## Key Features to Implement
+1. **Twitter-like Feed**: Real-time tweet feed with likes, retweets, replies
+2. **Job Board**: Job postings and referrals within network
+3. **User Profiles**: Alumni profiles with graduation year, branch, current company, role
+
+## Design Philosophy
+- **Interface**: Exact Twitter clone aesthetic (NOT LinkedIn-like)
+- **UX**: Familiar Twitter navigation and interactions
+- **Mobile-first**: Responsive design for all devices
+- **Performance**: Fast loading with optimistic updates
