@@ -7,22 +7,22 @@ import { Label } from '../components/ui/label'
 import { Textarea } from '../components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
-import { backend } from '../lib/utils'
+import { api } from '../lib/utils'
 
 const DTU_BRANCHES = [
   'Computer Science and Engineering',
-  'Electronics and Communication Engineering',
-  'Mechanical Engineering',
-  'Civil Engineering',
-  'Electrical Engineering',
   'Information Technology',
-  'Production and Industrial Engineering',
-  'Engineering Physics',
+  'Software Engineering',
   'Mathematics and Computing',
-  'Biotechnology',
+  'Electronics and Communication Engineering',
+  'Electrical Engineering',
+  'Engineering Physics',
+  'Mechanical Engineering',
+  'Production and Industrial Engineering',
   'Chemical Engineering',
+  'Civil Engineering',
   'Environmental Engineering',
-  'Software Engineering'
+  'Biotechnology',
 ]
 
 export default function ProfileSetup() {
@@ -41,7 +41,7 @@ export default function ProfileSetup() {
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
-      const res = await backend.users.profile.$patch({
+      const res = await api.users.profile.$patch({
         json: {
           ...data,
           graduationYear: data.graduationYear ? parseInt(data.graduationYear) : undefined,

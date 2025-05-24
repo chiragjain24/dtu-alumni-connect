@@ -6,7 +6,6 @@ import useGetProfile from '@/lib/hooks/get-profile'
 export default function Home() {
   const { data: profile, isPending } = useGetProfile();
 
-
   const handleSignOut = async () => {
     try {
       await signOut()

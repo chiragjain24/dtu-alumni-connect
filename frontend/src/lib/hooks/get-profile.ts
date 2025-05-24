@@ -1,11 +1,11 @@
-import { backend } from '../utils'
+import { api } from '../utils'
 import { useQuery } from '@tanstack/react-query'
 
 const useGetProfile = () => {
     const { data, isPending } = useQuery({
         queryKey: ['user-profile'],
         queryFn: async () => {
-          const res = await backend.users.profile.$get()
+          const res = await api.users.profile.$get()
           if (!res.ok) {
             throw new Error('Failed to fetch profile')
           }

@@ -1,16 +1,21 @@
 import { signIn } from '../lib/auth-client'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
+import { useState } from 'react'
 
 export default function Login() {
+  const [isLoading, setIsLoading] = useState(false)
   const handleGoogleSignIn = async () => {
     try {
+      setIsLoading(true)
       await signIn.social({
         provider: 'google',
         callbackURL: 'http://localhost:5173/'
       })
     } catch (error) {
       console.error('Login failed:', error)
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -26,7 +31,8 @@ export default function Login() {
         <CardContent className="space-y-4">
           <Button 
             onClick={handleGoogleSignIn}
-            className="w-full"
+            disabled={isLoading}
+            className="w-full hover:cursor-pointer"
             size="lg"
           >
             <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
