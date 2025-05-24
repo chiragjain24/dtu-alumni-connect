@@ -332,13 +332,13 @@ bun run devf
 ### Database Operations
 ```bash
 # Generate migration
-cd backend && bun run db:generate
+cd backend; bun run db:generate
 
 # Run migration
-cd backend && bun run db:migrate
+cd backend; bun run db:migrate
 
 # Reset database (if needed)
-cd backend && bun run db:reset
+cd backend; bun run db:reset
 ```
 
 ### Testing Each Phase

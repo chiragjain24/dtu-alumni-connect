@@ -18,8 +18,8 @@ alwaysApply: false
 - **Frontend**: `bun run devf` - Start Vite dev server
 - **Backend**: `bun run dev` - Start Hono server with hot reload
 - **Database**: 
-  - `cd backend && bun run db:generate` - Generate migrations
-  - `cd backend && bun run db:migrate` - Run migrations
+  - `cd backend; bun run db:generate` - Generate migrations
+  - `cd backend; bun run db:migrate` - Run migrations
 
 ## Project Configuration Files
 - [package.json](mdc:package.json) - Root workspace configuration

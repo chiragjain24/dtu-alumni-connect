@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "cd backend && bun run dev",
-    "devf": "cd frontend && bun run dev",
-    "install:f": "cd frontend && bun install",
-    "install:b": "cd backend && bun install"
+    "dev": "cd backend; bun run dev",
+    "devf": "cd frontend; bun run dev",
+    "install:f": "cd frontend; bun install",
+    "install:b": "cd backend; bun install"
   },
   "workspaces": [
     "frontend",
