@@ -7,7 +7,18 @@ export const user = pgTable("user", {
  emailVerified: boolean('email_verified').$defaultFn(() => false).notNull(),
  image: text('image'),
  createdAt: timestamp('created_at').$defaultFn(() => /* @__PURE__ */ new Date()).notNull(),
- updatedAt: timestamp('updated_at').$defaultFn(() => /* @__PURE__ */ new Date()).notNull()
+ updatedAt: timestamp('updated_at').$defaultFn(() => /* @__PURE__ */ new Date()).notNull(),
+ 
+ // Alumni-specific fields
+ username: text('username').unique(), // Twitter-like username
+ bio: text('bio'), // User bio/description
+ graduationYear: integer('graduation_year'), // Year of graduation from DTU
+ branch: text('branch'), // Engineering branch (CS, ECE, ME, etc.)
+ currentCompany: text('current_company'), // Current company name
+ currentRole: text('current_role'), // Current job role
+ linkedinUrl: text('linkedin_url'), // LinkedIn profile URL
+ isAlumniVerified: boolean('is_alumni_verified').$defaultFn(() => false).notNull(), // DTU alumni verification status
+ profileSetupCompleted: boolean('profile_setup_completed').$defaultFn(() => false).notNull(), // Has completed profile setup
 				});
 
 export const session = pgTable("session", {

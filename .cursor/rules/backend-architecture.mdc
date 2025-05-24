@@ -12,7 +12,7 @@ The backend uses Hono framework with a clean API architecture:
 backend/src/
 ├── app.ts               # Main Hono application setup
 ├── index.ts             # Server entry point
-├── routes/              # API route handlers
+├── api/                 # API route handlers
 │   ├── auth.ts          # Authentication routes
 │   ├── tweets.ts        # Tweet CRUD operations
 │   ├── users.ts         # User profile management

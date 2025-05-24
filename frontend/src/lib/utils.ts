@@ -7,4 +7,11 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export const backend = hc<AppType>('http://localhost:3000').api;
+export const backend = hc<AppType>('http://localhost:3000/',{
+  fetch: ((input: RequestInfo | URL, init?: RequestInit) => {
+    return fetch(input, { 
+      ...init, 
+      credentials: "include" // Required for sending cookies cross-origin
+    });
+  }),
+}).api;

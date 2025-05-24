@@ -1,29 +1,39 @@
-import { backend } from './lib/utils'
-import { useQuery } from '@tanstack/react-query'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import AuthGuard from './components/AuthGuard'
+import Login from './pages/Login'
+import ProfileSetup from './pages/ProfileSetup'
+import Home from './pages/Home'
 
 function App() {
-  
-  const {data, isPending, isFetching, error} = useQuery({
-    queryKey: ['get-expenses'],
-    queryFn: async () => {
-      const res = await backend.expenses.$get();
-      if(!res.ok) {
-        throw new Error('Failed to fetch expenses')
-      }
-      return res.json()
-    },
-    refetchOnWindowFocus: false,
-  })
-
-  if(isPending) return <div>Loading...</div>
-  if(isFetching) return <div>Fetching...</div>
-  if(error) return <div>Error: {error.message}</div>
-
   return (
-    <>
-      <h1>Hello World</h1>
-      <p>{JSON.stringify(data)}</p>
-    </>
+    <Router>
+      <Routes>
+        {/* Public routes */}
+        <Route path="/login" element={<Login />} />
+        
+        {/* Protected routes */}
+        <Route 
+          path="/profile/setup" 
+          element={
+            <AuthGuard>
+              <ProfileSetup />
+            </AuthGuard>
+          } 
+        />
+        
+        <Route 
+          path="/" 
+          element={
+            <AuthGuard>
+              <Home />
+            </AuthGuard>
+          } 
+        />
+        
+        {/* Redirect any unknown routes to home */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Router>
   )
 }
 
