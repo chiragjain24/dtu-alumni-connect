@@ -16,6 +16,7 @@ export const auth = betterAuth({
     user:{
         additionalFields: {
             profileSetupCompleted: { type: "boolean",required: false },
+            username: { type: "string",required: false },
         }
     },
     session: {

@@ -1,48 +1,54 @@
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { MoreHorizontal, Heart, MessageCircle, Repeat2, Share } from 'lucide-react'
+import type { Tweet } from '@/types/types'
 
 interface TweetCardProps {
-  user: {
-    name: string
-    username: string
-    avatar?: string | null
-  }
-  content: string
-  timestamp: string
-  stats: {
-    replies: number
-    retweets: number
-    likes: number
-  }
+  tweet: Tweet
   isLiked?: boolean
   isRetweeted?: boolean
+  onLike?: () => void
+  onRetweet?: () => void
+  onReply?: () => void
 }
 
 export function TweetCard({ 
-  user, 
-  content, 
-  timestamp, 
-  stats, 
+  tweet, 
   isLiked = false, 
-  isRetweeted = false 
+  isRetweeted = false,
+  onLike,
+  onRetweet,
+  onReply,
 }: TweetCardProps) {
+  const formatTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    
+    if (diffInSeconds < 60) return `${diffInSeconds}s`;
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h`;
+    return `${Math.floor(diffInSeconds / 86400)}d`;
+  };
+
   return (
     <div className="p-4 hover:bg-accent/50 transition-colors cursor-pointer border-b border-border">
       <div className="flex space-x-3">
         <Avatar className="w-12 h-12">
-          <AvatarImage src={user.avatar || undefined} alt={`${user.name} avatar`} />
+          <AvatarImage src={tweet.authorImage || undefined} alt={`${tweet.authorName} avatar`} />
           <AvatarFallback>
-            {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+            {tweet.authorName?.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
           </AvatarFallback>
         </Avatar>
         
         <div className="flex-1">
           <div className="flex items-center space-x-2">
-            <h3 className="font-bold text-foreground hover:underline">{user.name}</h3>
-            <span className="text-muted-foreground">@{user.username}</span>
+            <h3 className="font-bold text-foreground hover:underline">{tweet.authorName}</h3>
+            {tweet.authorUsername && (
+              <span className="text-muted-foreground">@{tweet.authorUsername}</span>
+            )}
             <span className="text-muted-foreground">·</span>
-            <span className="text-muted-foreground">{timestamp}</span>
+            <span className="text-muted-foreground">{formatTimeAgo(tweet.createdAt)}</span>
             <div className="ml-auto">
               <Button variant="ghost" size="sm" className="rounded-full">
                 <MoreHorizontal className="w-4 h-4" />
@@ -51,7 +57,7 @@ export function TweetCard({
           </div>
           
           <div className="mt-1">
-            <p className="text-foreground whitespace-pre-wrap">{content}</p>
+            <p className="text-foreground whitespace-pre-wrap">{tweet.content}</p>
           </div>
 
           <div className="flex items-center justify-between max-w-md mt-3">
@@ -59,9 +65,10 @@ export function TweetCard({
               variant="ghost" 
               size="sm" 
               className="flex items-center space-x-2 text-muted-foreground hover:text-primary rounded-full"
+              onClick={onReply}
             >
               <MessageCircle className="w-4 h-4" />
-              <span className="text-sm">{stats.replies}</span>
+              <span className="text-sm">{tweet.repliesCount}</span>
             </Button>
             
             <Button 
@@ -72,9 +79,10 @@ export function TweetCard({
                   ? 'text-green-600' 
                   : 'text-muted-foreground hover:text-green-600'
               }`}
+              onClick={onRetweet}
             >
               <Repeat2 className="w-4 h-4" />
-              <span className="text-sm">{stats.retweets}</span>
+              <span className="text-sm">{tweet.retweetsCount}</span>
             </Button>
             
             <Button 
@@ -85,9 +93,10 @@ export function TweetCard({
                   ? 'text-red-500' 
                   : 'text-muted-foreground hover:text-red-500'
               }`}
+              onClick={onLike}
             >
               <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
-              <span className="text-sm">{stats.likes}</span>
+              <span className="text-sm">{tweet.likesCount}</span>
             </Button>
             
             <Button 

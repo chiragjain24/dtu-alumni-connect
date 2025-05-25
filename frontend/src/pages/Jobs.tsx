@@ -1,51 +1,37 @@
 import { Button } from '../components/ui/button'
 import { TweetCard } from '../components/tweets/tweet-card'
 import { Briefcase, MapPin, Clock, ExternalLink } from 'lucide-react'
-
+import type { Tweet } from '@/types/types'
 export default function Jobs() {
   // Sample job postings
-  const jobPosts = [
+  const jobPosts: Tweet[] = [
     {
-      user: {
-        name: 'Rahul Sharma',
-        username: 'rahul_dtu_2018',
-        avatar: undefined
-      },
+      id: '1',
       content: '🚀 We\'re hiring Senior Software Engineers at Google Bangalore! Looking for DTU alumni with 3+ years experience in React/Node.js. Great opportunity for growth and learning. DM me for referrals! #TechJobs #DTUAlumni #Google',
-      timestamp: '2h',
-      stats: {
-        replies: 28,
-        retweets: 45,
-        likes: 89
-      }
+      authorId: '1',
+      isRetweet: false,
+      likesCount: 89,
+      retweetsCount: 45,
+      repliesCount: 28,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      authorName: 'Rahul Sharma',
+      authorUsername: 'rahul_dtu_2018',
+      authorImage: '',
     },
     {
-      user: {
-        name: 'Priya Gupta',
-        username: 'priya_dtu_alumni',
-        avatar: undefined
-      },
-      content: 'Microsoft is looking for Product Managers in Hyderabad office. Perfect for DTU alumni with 2-5 years experience. Competitive package and amazing work culture. Happy to provide referrals to deserving candidates! #ProductManager #Microsoft',
-      timestamp: '4h',
-      stats: {
-        replies: 15,
-        retweets: 32,
-        likes: 67
-      }
-    },
-    {
-      user: {
-        name: 'DTU Placement Cell',
-        username: 'dtu_placements',
-        avatar: undefined
-      },
-      content: '📢 Campus Placement Update: Amazon, Flipkart, and Zomato are visiting next week for final year placements. Alumni mentors will be available for mock interviews. Best of luck to all students! #Placements2024 #DTUPlacements',
-      timestamp: '6h',
-      stats: {
-        replies: 42,
-        retweets: 78,
-        likes: 156
-      }
+      id: '2',
+      content: '🚀 We\'re hiring Senior Software Engineers at Google Bangalore! Looking for DTU alumni with 3+ years experience in React/Node.js. Great opportunity for growth and learning. DM me for referrals! #TechJobs #DTUAlumni #Google',
+      authorId: '1',
+      isRetweet: false,
+      likesCount: 89,
+      retweetsCount: 45,
+      repliesCount: 28,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      authorName: 'Rahul Sharma',
+      authorUsername: 'rahul_dtu_2018',
+      authorImage: '',
     }
   ]
 
@@ -138,10 +124,7 @@ export default function Jobs() {
         {jobPosts.map((post, index) => (
           <TweetCard
             key={index}
-            user={post.user}
-            content={post.content}
-            timestamp={post.timestamp}
-            stats={post.stats}
+            tweet={post}
           />
         ))}
 

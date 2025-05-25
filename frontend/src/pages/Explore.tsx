@@ -1,3 +1,5 @@
+import type { Tweet } from '@/types/types'
+
 import { TweetCard } from '../components/tweets/tweet-card'
 import { Search, TrendingUp } from 'lucide-react'
 
@@ -11,34 +13,34 @@ export default function Explore() {
     { topic: '#Engineering', tweets: '3,421 Tweets' }
   ]
 
-  const exploreTweets = [
+  const exploreTweets: Tweet[] = [
     {
-      user: {
-        name: 'DTU Placement Cell',
-        username: 'dtu_placements',
-        avatar: undefined
-      },
+      id: '1',
       content: '🎉 Congratulations to all DTU students who got placed in top companies this season! Special shoutout to our alumni who provided referrals. #DTUAlumni #Placements2024',
-      timestamp: '3h',
-      stats: {
-        replies: 45,
-        retweets: 128,
-        likes: 312
-      }
+      authorId: 'placement-cell',
+      isRetweet: false,
+      likesCount: 312,
+      retweetsCount: 128,
+      repliesCount: 45,
+      createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
+      updatedAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
+      authorName: 'DTU Placement Cell',
+      authorUsername: 'dtu_placements',
+      authorImage: 'https://via.placeholder.com/150'
     },
     {
-      user: {
-        name: 'Tech Alumni Network',
-        username: 'tech_alumni_dtu',
-        avatar: undefined
-      },
+      id: '2', 
       content: 'Weekly tech meetup this Saturday at Cyber Hub, Gurgaon! Topics: AI/ML trends, startup opportunities, and networking. Alumni from Google, Microsoft, and Amazon will be present. #TechJobs',
-      timestamp: '5h',
-      stats: {
-        replies: 23,
-        retweets: 67,
-        likes: 156
-      }
+      authorId: 'tech-alumni',
+      isRetweet: false,
+      likesCount: 156,
+      retweetsCount: 67,
+      repliesCount: 23,
+      createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+      updatedAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+      authorName: 'Tech Alumni Network',
+      authorUsername: 'tech_alumni_dtu',
+      authorImage: 'https://via.placeholder.com/150'
     }
   ]
 
@@ -91,10 +93,7 @@ export default function Explore() {
         {exploreTweets.map((tweet, index) => (
           <TweetCard
             key={index}
-            user={tweet.user}
-            content={tweet.content}
-            timestamp={tweet.timestamp}
-            stats={tweet.stats}
+            tweet={tweet}
           />
         ))}
 
