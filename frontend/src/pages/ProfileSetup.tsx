@@ -8,7 +8,7 @@ import { Textarea } from '../components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
 import { api } from '../lib/utils'
-import useGetProfile from '@/lib/hooks/get-profile'
+import useGetMyProfile from '@/lib/hooks/get-my-profile'
 import Loader from '@/components/loader'
 
 const DTU_BRANCHES = [
@@ -30,7 +30,7 @@ const DTU_BRANCHES = [
 export default function ProfileSetup() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const {data: profile, isPending} = useGetProfile()
+  const {data: profile, isPending} = useGetMyProfile()
 
   
   const [formData, setFormData] = useState({
@@ -58,7 +58,7 @@ export default function ProfileSetup() {
       return res.json()
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['user-profile'] })
+      queryClient.invalidateQueries({ queryKey: ['my-profile'] })
       navigate('/')
     }
   })
@@ -88,7 +88,7 @@ export default function ProfileSetup() {
   
   if (isPending) return <Loader /> 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen py-8">
       <div className="max-w-2xl mx-auto px-4">
         <Card>
           <CardHeader>

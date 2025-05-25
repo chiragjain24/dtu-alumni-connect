@@ -109,7 +109,7 @@ This roadmap breaks down the DTU Alumni Connect development into testable phases
 
 3. **Timeline Logic**
    - Algorithm for home timeline
-   - Pagination support
+   - Infinite Scroll
    - Performance optimization
 
 ### Frontend Tasks

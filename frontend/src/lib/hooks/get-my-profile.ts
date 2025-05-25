@@ -1,9 +1,9 @@
 import { api } from '../utils'
 import { useQuery } from '@tanstack/react-query'
 
-const useGetProfile = () => {
+const useGetMyProfile = () => {
     const { data, isPending } = useQuery({
-        queryKey: ['user-profile'],
+        queryKey: ['my-profile'],
         queryFn: async () => {
           const res = await api.users.profile.$get()
           if (!res.ok) {
@@ -12,9 +12,10 @@ const useGetProfile = () => {
           return res.json()
         },
         refetchOnWindowFocus: false,
+        refetchOnMount: false,
       })
     
   return { data, isPending };
 }
 
-export default useGetProfile;
+export default useGetMyProfile;

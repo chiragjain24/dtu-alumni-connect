@@ -1,10 +1,10 @@
 import { TweetCard } from '../components/tweets/tweet-card'
 import { TweetComposer } from '../components/tweets/tweet-composer'
-import useGetProfile from '@/lib/hooks/get-profile'
+import useGetMyProfile from '@/lib/hooks/get-my-profile'
 import Loader from '@/components/loader'
 
 export default function Home() {
-  const { data: profile, isPending } = useGetProfile()
+  const { data: profile, isPending } = useGetMyProfile()
 
   if (isPending) return <Loader />
 

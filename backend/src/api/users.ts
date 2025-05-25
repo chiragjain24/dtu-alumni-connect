@@ -44,10 +44,7 @@ export const usersRoute = new Hono<{
     }
 
     const profile = userProfile[0]
-    // Remove sensitive information
-    const { email, emailVerified, ...publicProfile } = profile
-
-    return c.json({ user: publicProfile })
+    return c.json({ user: profile })
   } catch (error) {
     console.error('Error fetching user profile:', error)
     return c.json({ error: 'Internal server error' }, 500)
@@ -94,10 +91,8 @@ export const usersRoute = new Hono<{
     }
 
     const profile = updatedUser[0]
-    // Remove sensitive information
-    const { email, emailVerified, ...publicProfile } = profile
 
-    return c.json({ user: publicProfile })
+    return c.json({ user: profile })
   } catch (error) {
     console.error('Error updating user profile:', error)
     return c.json({ error: 'Internal server error' }, 500)

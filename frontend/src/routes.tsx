@@ -5,6 +5,8 @@ import ProfileSetup from './pages/ProfileSetup'
 import Home from './pages/Home'
 import Explore from './pages/Explore'
 import Jobs from './pages/Jobs'
+import Profile from './pages/Profile'
+import Settings from './pages/Settings'
 import RootLayout from './components/layout/root-layout'
 
 // Placeholder components for Phase 2
@@ -112,7 +114,18 @@ function RoutesHandler() {
           element={
             <AuthGuard>
               <RootLayout>
-                <PlaceholderPage title="Profile" />
+                <Profile />
+              </RootLayout>
+            </AuthGuard>
+          } 
+        />
+
+        <Route 
+          path="/profile/:username" 
+          element={
+            <AuthGuard>
+              <RootLayout>
+                <Profile />
               </RootLayout>
             </AuthGuard>
           } 
@@ -123,7 +136,7 @@ function RoutesHandler() {
           element={
             <AuthGuard>
               <RootLayout>
-                <PlaceholderPage title="Settings" />
+                <Settings />
               </RootLayout>
             </AuthGuard>
           } 
