@@ -2,6 +2,7 @@ import { signOut } from '../lib/auth-client'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
 import useGetProfile from '@/lib/hooks/get-profile'
+import Loader from '@/components/loader';
 
 export default function Home() {
   const { data: profile, isPending } = useGetProfile();
@@ -14,16 +15,11 @@ export default function Home() {
     }
   }
 
-  if (isPending) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    )
-  }
+  if (isPending) return <Loader /> 
 
   return (
     <div className="min-h-screen bg-gray-50">
+
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -35,10 +31,10 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <main className="mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <div>
           {/* Profile Card */}
-          <div className="lg:col-span-1">
+          <div>
             <Card>
               <CardHeader>
                 <CardTitle>Your Profile</CardTitle>
@@ -84,7 +80,7 @@ export default function Home() {
           </div>
 
           {/* Main Content */}
-          <div className="lg:col-span-2">
+          <div className='mt-2'>
             <Card>
               <CardHeader>
                 <CardTitle>Welcome to DTU Alumni Connect!</CardTitle>
@@ -109,6 +105,7 @@ export default function Home() {
           </div>
         </div>
       </main>
+
     </div>
   )
 } 

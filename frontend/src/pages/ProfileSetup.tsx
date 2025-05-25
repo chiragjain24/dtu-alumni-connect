@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Button } from '../components/ui/button'
@@ -8,6 +8,8 @@ import { Textarea } from '../components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
 import { api } from '../lib/utils'
+import useGetProfile from '@/lib/hooks/get-profile'
+import Loader from '@/components/loader'
 
 const DTU_BRANCHES = [
   'Computer Science and Engineering',
@@ -28,6 +30,8 @@ const DTU_BRANCHES = [
 export default function ProfileSetup() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const {data: profile, isPending} = useGetProfile()
+
   
   const [formData, setFormData] = useState({
     username: '',
@@ -68,6 +72,21 @@ export default function ProfileSetup() {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
+  useEffect(() => {
+    if(profile) {
+      setFormData({
+        username: profile.user.username || '',
+        bio: profile.user.bio || '',
+        graduationYear: profile.user.graduationYear?.toString() || '',
+        branch: profile.user.branch || '',
+        currentCompany: profile.user.currentCompany || '',
+        currentRole: profile.user.currentRole || '',
+        linkedinUrl: profile.user.linkedinUrl || ''
+      })
+    }
+  }, [profile])
+  
+  if (isPending) return <Loader /> 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-2xl mx-auto px-4">

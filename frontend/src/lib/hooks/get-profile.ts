@@ -10,7 +10,8 @@ const useGetProfile = () => {
             throw new Error('Failed to fetch profile')
           }
           return res.json()
-        }
+        },
+        refetchOnWindowFocus: false,
       })
     
   return { data, isPending };

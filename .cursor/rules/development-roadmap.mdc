@@ -60,11 +60,15 @@ This roadmap breaks down the DTU Alumni Connect development into testable phases
 ## Phase 2: Basic Twitter UI & Layout (Week 2)
 **Goal**: Twitter-like interface and navigation
 
+### Current Status of Code
+1. **Layout**
+   - Responsive Width of Sidebar, MainLayout, RightSidebar is done and perfect for all screen sizes.
+
 ### Frontend Tasks
 1. **Core Layout Components**
-   - `Sidebar` component with Twitter-like navigation
-   - `TopBar` component with logo and user menu
-   - `MainLayout` component structure
+   - `LeftSidebar` component with Twitter-like navigation
+   - `MainLayout` Timeline
+   - `RightSidebar` LEAVE THIS FOR NOW. Will make it later
 
 2. **Pages Structure**
    - Home/Timeline page (`/`)
@@ -79,8 +83,7 @@ This roadmap breaks down the DTU Alumni Connect development into testable phases
 
 4. **Responsive Design**
    - Mobile-first approach
-   - Sidebar collapse on mobile
-   - Grid layouts for different screen sizes
+
 
 ### Testable Results
 - Twitter-like interface loads

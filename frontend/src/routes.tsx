@@ -1,12 +1,13 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import AuthGuard from './components/AuthGuard'
 import Login from './pages/Login'
 import ProfileSetup from './pages/ProfileSetup'
 import Home from './pages/Home'
+import RootLayout from './components/layout/root-layout'
 
-function App() {
+function RoutesHandler() {
   return (
-    <Router>
+    <BrowserRouter>
       <Routes>
         {/* Public routes */}
         <Route path="/login" element={<Login />} />
@@ -16,7 +17,9 @@ function App() {
           path="/profile/setup" 
           element={
             <AuthGuard>
-              <ProfileSetup />
+              <RootLayout>
+                <ProfileSetup />
+              </RootLayout>
             </AuthGuard>
           } 
         />
@@ -25,7 +28,9 @@ function App() {
           path="/" 
           element={
             <AuthGuard>
-              <Home />
+              <RootLayout>
+                <Home />
+              </RootLayout>
             </AuthGuard>
           } 
         />
@@ -33,8 +38,8 @@ function App() {
         {/* Redirect any unknown routes to home */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </Router>
+    </BrowserRouter>
   )
 }
 
-export default App
+export default RoutesHandler

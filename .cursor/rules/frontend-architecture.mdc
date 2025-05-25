@@ -12,7 +12,7 @@ The frontend follows a Twitter-inspired component architecture:
 frontend/src/
 ├── components/          # Reusable UI components
 │   ├── ui/              # Base UI components (Shadcn UI)
-│   ├── layout/          # Layout components (Sidebar)
+│   ├── layout/          # Layout components (LeftSidebar, MainContainer, RightSidebar, RootLayout)
 │   ├── tweet/           # Tweet-related components
 │   ├── profile/         # Profile components
 │   └── common/          # Common components
@@ -33,8 +33,8 @@ frontend/src/
 
 ## Component Guidelines
 1. **Twitter UI Components**: Mirror Twitter's component structure
+   - LeftSidebar, Timeline, RightSidebar
    - TweetCard, TweetComposer, TweetThread
-   - Sidebar, Timeline
 
 2. **State Management**: 
    - Use TanStack Query for server state
