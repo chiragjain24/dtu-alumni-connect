@@ -8,15 +8,15 @@ type Props = {
 
 const RootLayout = ({children}: Props) => {
   return (
-    <>
-      <div className='border-4 border-red-800 flex gap-4 mx-auto max-w-7xl'>
+    <div className='min-h-screen bg-background'>
+      <div className='flex gap-4 mx-auto max-w-7xl'>
         <LeftSidebar />
         <MainContainer>
           {children}
         </MainContainer>
         <RightSidebar />
       </div>
-    </>
+    </div>
   )
 }
 

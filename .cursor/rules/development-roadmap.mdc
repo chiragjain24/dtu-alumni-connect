@@ -62,13 +62,11 @@ This roadmap breaks down the DTU Alumni Connect development into testable phases
 
 ### Current Status of Code
 1. **Layout**
-   - Responsive Width of Sidebar, MainLayout, RightSidebar is done and perfect for all screen sizes.
+   - Responsive Width of LeftSidebar, MainContainer, RightSidebar is done and perfect for all screen sizes.
 
 ### Frontend Tasks
 1. **Core Layout Components**
    - `LeftSidebar` component with Twitter-like navigation
-   - `MainLayout` Timeline
-   - `RightSidebar` LEAVE THIS FOR NOW. Will make it later
 
 2. **Pages Structure**
    - Home/Timeline page (`/`)

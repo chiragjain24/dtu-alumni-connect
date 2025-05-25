@@ -4,7 +4,7 @@ type Props = {
 
 const MainContainer = ({children}: Props) => {
   return (
-    <div className='border-4 border-blue-800 w-full sm:w-[600px]'>
+    <div className='w-full sm:w-[600px] border-x border-border min-h-screen'>
         {children}
     </div>
   )

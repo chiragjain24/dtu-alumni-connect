@@ -20,7 +20,7 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="min-h-screen flex items-center justify-center bg-background">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold">DTU Alumni Connect</CardTitle>
@@ -43,7 +43,7 @@ export default function Login() {
             </svg>
             Continue with Google
           </Button>
-          <p className="text-sm text-gray-600 text-center">
+          <p className="text-sm text-muted-foreground text-center">
             Only DTU alumni with verified email addresses can join
           </p>
         </CardContent>

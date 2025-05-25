@@ -1,0 +1,163 @@
+import { Button } from '../components/ui/button'
+import { TweetCard } from '../components/tweets/tweet-card'
+import { Briefcase, MapPin, Clock, ExternalLink } from 'lucide-react'
+
+export default function Jobs() {
+  // Sample job postings
+  const jobPosts = [
+    {
+      user: {
+        name: 'Rahul Sharma',
+        username: 'rahul_dtu_2018',
+        avatar: undefined
+      },
+      content: '🚀 We\'re hiring Senior Software Engineers at Google Bangalore! Looking for DTU alumni with 3+ years experience in React/Node.js. Great opportunity for growth and learning. DM me for referrals! #TechJobs #DTUAlumni #Google',
+      timestamp: '2h',
+      stats: {
+        replies: 28,
+        retweets: 45,
+        likes: 89
+      }
+    },
+    {
+      user: {
+        name: 'Priya Gupta',
+        username: 'priya_dtu_alumni',
+        avatar: undefined
+      },
+      content: 'Microsoft is looking for Product Managers in Hyderabad office. Perfect for DTU alumni with 2-5 years experience. Competitive package and amazing work culture. Happy to provide referrals to deserving candidates! #ProductManager #Microsoft',
+      timestamp: '4h',
+      stats: {
+        replies: 15,
+        retweets: 32,
+        likes: 67
+      }
+    },
+    {
+      user: {
+        name: 'DTU Placement Cell',
+        username: 'dtu_placements',
+        avatar: undefined
+      },
+      content: '📢 Campus Placement Update: Amazon, Flipkart, and Zomato are visiting next week for final year placements. Alumni mentors will be available for mock interviews. Best of luck to all students! #Placements2024 #DTUPlacements',
+      timestamp: '6h',
+      stats: {
+        replies: 42,
+        retweets: 78,
+        likes: 156
+      }
+    }
+  ]
+
+  const featuredJobs = [
+    {
+      company: 'Google',
+      position: 'Senior Software Engineer',
+      location: 'Bangalore',
+      type: 'Full-time',
+      postedBy: 'Rahul Sharma (DTU \'18)'
+    },
+    {
+      company: 'Microsoft',
+      position: 'Product Manager',
+      location: 'Hyderabad',
+      type: 'Full-time',
+      postedBy: 'Priya Gupta (DTU \'17)'
+    },
+    {
+      company: 'Amazon',
+      position: 'Data Scientist',
+      location: 'Delhi',
+      type: 'Full-time',
+      postedBy: 'Amit Kumar (DTU \'19)'
+    }
+  ]
+
+  return (
+    <div className="min-h-screen">
+      {/* Header */}
+      <div className="sticky top-0 bg-background/80 backdrop-blur-md border-b border-border px-4 py-3">
+        <h1 className="text-xl font-bold text-foreground">Jobs</h1>
+      </div>
+
+      {/* Post Job Button */}
+      <div className="p-4 border-b border-border">
+        <Button 
+          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-3 rounded-full"
+          disabled
+        >
+          <Briefcase className="w-5 h-5 mr-2" />
+          Post a Job Opportunity
+        </Button>
+      </div>
+
+      {/* Featured Jobs Section */}
+      <div className="border-b border-border">
+        <div className="p-4">
+          <h2 className="text-lg font-bold text-foreground mb-4">Featured Opportunities</h2>
+          
+          <div className="space-y-4">
+            {featuredJobs.map((job, index) => (
+              <div key={index} className="bg-muted rounded-lg p-4 hover:bg-muted/80 transition-colors cursor-pointer">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <h3 className="font-bold text-foreground">{job.position}</h3>
+                    <p className="text-primary font-medium">{job.company}</p>
+                    
+                    <div className="flex items-center space-x-4 mt-2 text-sm text-muted-foreground">
+                      <div className="flex items-center space-x-1">
+                        <MapPin className="w-4 h-4" />
+                        <span>{job.location}</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <Clock className="w-4 h-4" />
+                        <span>{job.type}</span>
+                      </div>
+                    </div>
+                    
+                    <p className="text-xs text-muted-foreground mt-2">Posted by {job.postedBy}</p>
+                  </div>
+                  
+                  <Button variant="outline" size="sm" disabled>
+                    <ExternalLink className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Job Posts Timeline */}
+      <div>
+        <div className="p-4 border-b border-border">
+          <h2 className="text-lg font-bold text-foreground">Recent Job Posts</h2>
+          <p className="text-sm text-muted-foreground">Job opportunities shared by DTU alumni</p>
+        </div>
+        
+        {jobPosts.map((post, index) => (
+          <TweetCard
+            key={index}
+            user={post.user}
+            content={post.content}
+            timestamp={post.timestamp}
+            stats={post.stats}
+          />
+        ))}
+
+        {/* Phase 2 Note */}
+        <div className="p-6 text-center bg-muted border-b border-border">
+          <h3 className="text-lg font-bold text-primary mb-2">
+            Jobs Board - Phase 2 UI Complete! 🎉
+          </h3>
+          <p className="text-muted-foreground mb-2">
+            Job posting and referral system UI is ready
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Backend integration and posting functionality coming in Phase 3
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+} 

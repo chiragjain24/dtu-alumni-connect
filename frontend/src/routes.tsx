@@ -3,7 +3,23 @@ import AuthGuard from './components/AuthGuard'
 import Login from './pages/Login'
 import ProfileSetup from './pages/ProfileSetup'
 import Home from './pages/Home'
+import Explore from './pages/Explore'
+import Jobs from './pages/Jobs'
 import RootLayout from './components/layout/root-layout'
+
+// Placeholder components for Phase 2
+const PlaceholderPage = ({ title }: { title: string }) => (
+  <div className="min-h-screen">
+    <div className="sticky top-0 bg-background/80 backdrop-blur-md border-b border-border px-4 py-3">
+      <h1 className="text-xl font-bold text-foreground">{title}</h1>
+    </div>
+    <div className="p-6 text-center">
+      <h2 className="text-2xl font-bold text-foreground mb-4">{title}</h2>
+      <p className="text-muted-foreground mb-4">This page will be implemented in future phases.</p>
+      <p className="text-sm text-muted-foreground">Currently in Phase 2: Twitter-like UI & Layout</p>
+    </div>
+  </div>
+)
 
 function RoutesHandler() {
   return (
@@ -30,6 +46,84 @@ function RoutesHandler() {
             <AuthGuard>
               <RootLayout>
                 <Home />
+              </RootLayout>
+            </AuthGuard>
+          } 
+        />
+
+        {/* Navigation routes */}
+        <Route 
+          path="/explore" 
+          element={
+            <AuthGuard>
+              <RootLayout>
+                <Explore />
+              </RootLayout>
+            </AuthGuard>
+          } 
+        />
+
+        <Route 
+          path="/notifications" 
+          element={
+            <AuthGuard>
+              <RootLayout>
+                <PlaceholderPage title="Notifications" />
+              </RootLayout>
+            </AuthGuard>
+          } 
+        />
+
+        <Route 
+          path="/messages" 
+          element={
+            <AuthGuard>
+              <RootLayout>
+                <PlaceholderPage title="Messages" />
+              </RootLayout>
+            </AuthGuard>
+          } 
+        />
+
+        <Route 
+          path="/bookmarks" 
+          element={
+            <AuthGuard>
+              <RootLayout>
+                <PlaceholderPage title="Bookmarks" />
+              </RootLayout>
+            </AuthGuard>
+          } 
+        />
+
+        <Route 
+          path="/jobs" 
+          element={
+            <AuthGuard>
+              <RootLayout>
+                <Jobs />
+              </RootLayout>
+            </AuthGuard>
+          } 
+        />
+
+        <Route 
+          path="/profile" 
+          element={
+            <AuthGuard>
+              <RootLayout>
+                <PlaceholderPage title="Profile" />
+              </RootLayout>
+            </AuthGuard>
+          } 
+        />
+
+        <Route 
+          path="/settings" 
+          element={
+            <AuthGuard>
+              <RootLayout>
+                <PlaceholderPage title="Settings" />
               </RootLayout>
             </AuthGuard>
           } 
