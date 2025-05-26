@@ -3,27 +3,28 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { MoreHorizontal, Heart, MessageCircle, Repeat2, Share } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import type { Tweet } from '@/types/types'
+import { useState } from 'react'
 
 interface TweetCardProps {
   tweet: Tweet
-  isLiked?: boolean
-  isRetweeted?: boolean
-  onLike?: () => void
-  onRetweet?: () => void
-  onReply?: () => void
-  disableNavigation?: boolean // For when used in tweet detail page
 }
 
 export function TweetCard({ 
   tweet, 
-  isLiked = false, 
-  isRetweeted = false,
-  onLike,
-  onRetweet,
-  onReply,
-  disableNavigation = false,
 }: TweetCardProps) {
   const navigate = useNavigate()
+  const [isLiked, setIsLiked] = useState(false)
+  const [isRetweeted, setIsRetweeted] = useState(false)
+  const handleLike = () => {
+    setIsLiked(!isLiked)
+  }
+  const handleRetweet = () => {
+    setIsRetweeted(!isRetweeted)
+  }
+  const handleReply = () => {
+    console.log('Reply to:', tweet.id);
+  }
+  
   const formatTimeAgo = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -41,9 +42,7 @@ export function TweetCard({
       return;
     }
     
-    if (!disableNavigation) {
-      navigate(`/tweet/${tweet.id}`);
-    }
+    navigate(`/tweet/${tweet.id}`);
   };
 
   return (
@@ -83,7 +82,7 @@ export function TweetCard({
               variant="ghost" 
               size="sm" 
               className="flex items-center space-x-2 text-muted-foreground hover:text-primary rounded-full"
-              onClick={onReply}
+              onClick={handleReply}
             >
               <MessageCircle className="w-4 h-4" />
               <span className="text-sm">{tweet.repliesCount}</span>
@@ -97,7 +96,7 @@ export function TweetCard({
                   ? 'text-green-600' 
                   : 'text-muted-foreground hover:text-green-600'
               }`}
-              onClick={onRetweet}
+              onClick={handleRetweet}
             >
               <Repeat2 className="w-4 h-4" />
               <span className="text-sm">{tweet.retweetsCount}</span>
@@ -111,7 +110,7 @@ export function TweetCard({
                   ? 'text-red-500' 
                   : 'text-muted-foreground hover:text-red-500'
               }`}
-              onClick={onLike}
+              onClick={handleLike}
             >
               <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
               <span className="text-sm">{tweet.likesCount}</span>

@@ -150,7 +150,6 @@ This roadmap breaks down the DTU Alumni Connect development into testable phases
 2. **Interaction API Routes**
    - `POST /api/tweets/:id/like` - Like/unlike tweet
    - `POST /api/tweets/:id/retweet` - Retweet functionality
-   - `POST /api/tweets/:id/reply` - Reply to tweet
    - `POST /api/users/:id/follow` - Follow/unfollow user
    - `GET /api/users/:id/followers` - Get followers
    - `GET /api/users/:id/following` - Get following

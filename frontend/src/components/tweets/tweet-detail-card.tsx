@@ -2,24 +2,28 @@ import { Button } from '@/components/ui/button'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { MoreHorizontal, Heart, MessageCircle, Repeat2, Share } from 'lucide-react'
 import type { Tweet } from '@/types/types'
+import { useState } from 'react'
 
 interface TweetDetailCardProps {
   tweet: Tweet
-  isLiked?: boolean
-  isRetweeted?: boolean
-  onLike?: () => void
-  onRetweet?: () => void
-  onReply?: () => void
 }
 
 export function TweetDetailCard({ 
   tweet, 
-  isLiked = false, 
-  isRetweeted = false,
-  onLike,
-  onRetweet,
-  onReply,
 }: TweetDetailCardProps) {
+  const [isLiked, setIsLiked] = useState(false)
+  const [isRetweeted, setIsRetweeted] = useState(false)
+  
+  const handleLike = () => {
+    setIsLiked(!isLiked)
+  }
+  const handleRetweet = () => {
+    setIsRetweeted(!isRetweeted)
+  }
+  const handleReply = () => {
+    console.log('Reply to:', tweet.id);
+  };
+  
   const formatFullDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { 
@@ -74,7 +78,7 @@ export function TweetDetailCard({
           variant="ghost" 
           size="sm" 
           className="flex items-center space-x-2 text-muted-foreground hover:text-primary rounded-full p-3"
-          onClick={onReply}
+          onClick={handleReply}
         >
           <MessageCircle className="w-5 h-5" />
           {tweet.repliesCount > 0 && (
@@ -92,7 +96,7 @@ export function TweetDetailCard({
               ? 'text-green-600' 
               : 'text-muted-foreground hover:text-green-600'
           }`}
-          onClick={onRetweet}
+          onClick={handleRetweet}
         >
           <Repeat2 className="w-5 h-5" />
           {tweet.retweetsCount > 0 && (
@@ -110,7 +114,7 @@ export function TweetDetailCard({
               ? 'text-red-500' 
               : 'text-muted-foreground hover:text-red-500'
           }`}
-          onClick={onLike}
+          onClick={handleLike}
         >
           <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
           {tweet.likesCount > 0 && (

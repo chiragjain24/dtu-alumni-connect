@@ -284,6 +284,142 @@ const app = new Hono<{
     console.error('Error fetching user tweets:', error);
     throw new HTTPException(500, { message: 'Failed to fetch user tweets' });
   }
-});
+})
+
+// POST /api/tweets/:id/like - Like/unlike tweet
+.post('/:id/like', requireAuth, zValidator('param', tweetParamsSchema), async (c) => {
+  const user = c.get('user');
+  const { id } = c.req.valid('param');
+
+  try {
+    // Check if tweet exists
+    const [tweet] = await db
+      .select()
+      .from(tweets)
+      .where(eq(tweets.id, id))
+      .limit(1);
+
+    if (!tweet) {
+      throw new HTTPException(404, { message: 'Tweet not found' });
+    }
+
+    // Check if user already liked this tweet
+    const [existingLike] = await db
+      .select()
+      .from(likes)
+      .where(and(
+        eq(likes.userId, user!.id),
+        eq(likes.tweetId, id)
+      ))
+      .limit(1);
+
+    if (existingLike) {
+      // Unlike the tweet
+      await db.delete(likes).where(eq(likes.id, existingLike.id));
+      
+      // Decrement likes count
+      await db
+        .update(tweets)
+        .set({ 
+          likesCount: sql`${tweets.likesCount} - 1`,
+          updatedAt: new Date()
+        })
+        .where(eq(tweets.id, id));
+
+      return c.json({ message: 'Tweet unliked', liked: false });
+    } else {
+      // Like the tweet
+      await db.insert(likes).values({
+        userId: user!.id,
+        tweetId: id,
+      });
+
+      // Increment likes count
+      await db
+        .update(tweets)
+        .set({ 
+          likesCount: sql`${tweets.likesCount} + 1`,
+          updatedAt: new Date()
+        })
+        .where(eq(tweets.id, id));
+
+      return c.json({ message: 'Tweet liked', liked: true });
+    }
+  } catch (error) {
+    console.error('Error toggling like:', error);
+    if (error instanceof HTTPException) {
+      throw error;
+    }
+    throw new HTTPException(500, { message: 'Failed to toggle like' });
+  }
+})
+
+// POST /api/tweets/:id/retweet - Retweet functionality
+.post('/:id/retweet', requireAuth, zValidator('param', tweetParamsSchema), async (c) => {
+  const user = c.get('user');
+  const { id } = c.req.valid('param');
+
+  try {
+    // Check if tweet exists
+    const [tweet] = await db
+      .select()
+      .from(tweets)
+      .where(eq(tweets.id, id))
+      .limit(1);
+
+    if (!tweet) {
+      throw new HTTPException(404, { message: 'Tweet not found' });
+    }
+
+    // Check if user already retweeted this tweet
+    const [existingRetweet] = await db
+      .select()
+      .from(retweets)
+      .where(and(
+        eq(retweets.userId, user!.id),
+        eq(retweets.tweetId, id)
+      ))
+      .limit(1);
+
+    if (existingRetweet) {
+      // Undo retweet
+      await db.delete(retweets).where(eq(retweets.id, existingRetweet.id));
+      
+      // Decrement retweets count
+      await db
+        .update(tweets)
+        .set({ 
+          retweetsCount: sql`${tweets.retweetsCount} - 1`,
+          updatedAt: new Date()
+        })
+        .where(eq(tweets.id, id));
+
+      return c.json({ message: 'Retweet removed', retweeted: false });
+    } else {
+      // Create retweet record
+      await db.insert(retweets).values({
+        userId: user!.id,
+        tweetId: id,
+      });
+
+      // Increment retweets count
+      await db
+        .update(tweets)
+        .set({ 
+          retweetsCount: sql`${tweets.retweetsCount} + 1`,
+          updatedAt: new Date()
+        })
+        .where(eq(tweets.id, id));
+
+      return c.json({ message: 'Tweet retweeted', retweeted: true });
+    }
+  } catch (error) {
+    console.error('Error toggling retweet:', error);
+    if (error instanceof HTTPException) {
+      throw error;
+    }
+    throw new HTTPException(500, { message: 'Failed to toggle retweet' });
+  }
+})
 
 export { app as tweetsRoute }; 

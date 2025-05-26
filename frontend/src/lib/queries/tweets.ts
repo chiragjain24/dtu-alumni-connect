@@ -112,4 +112,50 @@ export function useDeleteTweet() {
       // queryClient.invalidateQueries({ queryKey: ['tweets'] });
     },
   });
-} 
+}
+
+// Like/unlike tweet mutation
+export function useLikeTweet() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (tweetId: string) => {
+      const response = await api.tweets[':id'].like.$post({ param: { id: tweetId } });
+      if (!response.ok) {
+        throw new Error('Failed to toggle like');
+      }
+      return await response.json();
+    },
+    onSuccess: (_, tweetId) => {
+      // Invalidate timeline to refresh like counts
+      queryClient.invalidateQueries({ queryKey: ['tweets', 'timeline'] });
+      // Invalidate specific tweet
+      queryClient.invalidateQueries({ queryKey: ['tweets', tweetId] });
+      // Invalidate user tweets
+      queryClient.invalidateQueries({ queryKey: ['tweets', 'user'] });
+    },
+  });
+}
+
+// Retweet/unretweet mutation
+export function useRetweetTweet() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (tweetId: string) => {
+      const response = await api.tweets[':id'].retweet.$post({ param: { id: tweetId } });
+      if (!response.ok) {
+        throw new Error('Failed to toggle retweet');
+      }
+      return await response.json();
+    },
+    onSuccess: (_, tweetId) => {
+      // Invalidate timeline to refresh retweet counts
+      queryClient.invalidateQueries({ queryKey: ['tweets', 'timeline'] });
+      // Invalidate specific tweet
+      queryClient.invalidateQueries({ queryKey: ['tweets', tweetId] });
+      // Invalidate user tweets
+      queryClient.invalidateQueries({ queryKey: ['tweets', 'user'] });
+    },
+  });
+}

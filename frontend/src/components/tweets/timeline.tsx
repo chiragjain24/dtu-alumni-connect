@@ -51,18 +51,6 @@ export function Timeline() {
             <TweetCard
               key={tweet.id}
               tweet={tweet}
-              onLike={() => {
-                // TODO: Implement like functionality
-                console.log('Like tweet:', tweet.id);
-              }}
-              onRetweet={() => {
-                // TODO: Implement retweet functionality
-                console.log('Retweet:', tweet.id);
-              }}
-              onReply={() => {
-                // TODO: Implement reply functionality
-                console.log('Reply to:', tweet.id);
-              }}
             />
           ))
         ) : (

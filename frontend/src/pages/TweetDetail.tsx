@@ -109,19 +109,6 @@ export default function TweetDetail() {
       <div className="border-b border-border">
         <TweetDetailCard 
           tweet={tweet}
-          onLike={() => {
-            // TODO: Implement like functionality
-            console.log('Like tweet:', tweet.id);
-          }}
-          onRetweet={() => {
-            // TODO: Implement retweet functionality
-            console.log('Retweet:', tweet.id);
-          }}
-          onReply={() => {
-            // Scroll to reply composer
-            const replyComposer = document.querySelector('textarea');
-            replyComposer?.focus();
-          }}
         />
       </div>
 
@@ -150,18 +137,6 @@ export default function TweetDetail() {
               <TweetCard 
                 key={reply.id} 
                 tweet={reply}
-                onLike={() => {
-                  // TODO: Implement like functionality
-                  console.log('Like reply:', reply.id);
-                }}
-                onRetweet={() => {
-                  // TODO: Implement retweet functionality
-                  console.log('Retweet reply:', reply.id);
-                }}
-                onReply={() => {
-                  // TODO: Implement reply to reply functionality
-                  console.log('Reply to reply:', reply.id);
-                }}
               />
             ))}
           </div>
