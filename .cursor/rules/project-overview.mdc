@@ -36,3 +36,12 @@ dtu-alumni/
 - **UX**: Familiar Twitter navigation and interactions
 - **Mobile-first**: Responsive design for all devices
 - **Performance**: Fast loading with optimistic updates
+
+## Development Commands
+```bash
+# Terminal 1 - Backend
+cd backend; bun run dev
+
+# Terminal 2 - Frontend  
+cd frontend; bun run dev
+```

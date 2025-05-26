@@ -19,6 +19,9 @@ frontend/src/
 ├── pages/               # All routes and their components in nested manner (mimic folder based routing)
 ├── hooks/               # Custom React hooks
 ├── lib/                 # Utilities and configurations
+│   ├── queries/         # Tanstack queries and mutations
+│   ├── hooks/           # Custom React hooks
+│   └── providers/       # Providers
 ├── types/               # TypeScript type definitions
 └── assets/              # Static assets
 ```

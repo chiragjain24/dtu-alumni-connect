@@ -164,6 +164,7 @@ This roadmap breaks down the DTU Alumni Connect development into testable phases
 
 2. **Thread System**
    - Reply threads display
+   - Reply to reply (nested threads)
    - Thread navigation
    - Quote tweets
 
@@ -174,7 +175,7 @@ This roadmap breaks down the DTU Alumni Connect development into testable phases
 ### Testable Results
 - Users can like/unlike tweets
 - Retweet functionality works
-- Reply threads display correctly
+- Reply to reply (nested threads)
 - Follow/unfollow system functional
 
 ---
@@ -324,10 +325,10 @@ This roadmap breaks down the DTU Alumni Connect development into testable phases
 ### Start Development
 ```bash
 # Terminal 1 - Backend
-bun run dev
+cd backend; bun run dev
 
 # Terminal 2 - Frontend  
-bun run devf
+cd frontend; bun run dev
 ```
 
 ### Database Operations

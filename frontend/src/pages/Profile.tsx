@@ -6,6 +6,8 @@ import { Avatar } from '../components/ui/avatar'
 import { Card, CardContent } from '../components/ui/card'
 import useGetMyProfile from '@/lib/queries'
 import useGetUserProfile from '@/lib/queries/users'
+import { useUserTweets } from '@/lib/queries/tweets'
+import { TweetCard } from '@/components/tweets/tweet-card'
 import Loader from '@/components/loader'
 
 export default function Profile() {
@@ -15,9 +17,15 @@ export default function Profile() {
   const { data: userProfile, isPending: userProfilePending } = useGetUserProfile(username || '')
   const [activeTab, setActiveTab] = useState<'tweets' | 'replies' | 'media' | 'likes'>('tweets')
 
+  const isMyProfile = !username || username === myProfile?.user.username
+
   // Determine which profile to show
-  const profile = username ? userProfile : myProfile
-  const isPending = username ? userProfilePending : myProfilePending
+  const profile = isMyProfile ? myProfile : userProfile
+  const isPending = isMyProfile ? myProfilePending : userProfilePending
+
+  // Get user tweets
+  const { data: userTweets, isPending: tweetsLoading } = useUserTweets(profile?.user.id || '')
+
 
   if (isPending) return <Loader />
 
@@ -58,7 +66,7 @@ export default function Profile() {
         </Button>
         <div className="h-[2rem] flex flex-col justify-center">
           <h1 className="text-xl font-bold">{user.name}</h1>
-          <p className="text-xs text-muted-foreground">{0} posts</p>
+          <p className="text-xs text-muted-foreground">{userTweets?.length || 0} posts</p>
         </div>
       </div>
 
@@ -77,7 +85,7 @@ export default function Profile() {
                 className="w-full h-full object-cover"
               />
             </Avatar>
-            {!username ? (
+            {isMyProfile ? (
               <Button 
                 variant="outline" 
                 className="mt-16"
@@ -178,30 +186,100 @@ export default function Profile() {
       </div>
 
       {/* Content */}
-      <div className="p-4">
-        <Card>
-          <CardContent className="p-8 text-center">
-            <div className="space-y-4">
-              <div className="w-16 h-16 mx-auto bg-muted rounded-full flex items-center justify-center">
-                <Users className="w-8 h-8 text-muted-foreground" />
+      <div>
+        {activeTab === 'tweets' && (
+          <div>
+            {tweetsLoading ? (
+              <div className="p-8 text-center">
+                <Loader />
               </div>
+            ) : userTweets && userTweets.length > 0 ? (
               <div>
-                <h3 className="text-xl font-semibold mb-2">No {activeTab} yet</h3>
-                <p className="text-muted-foreground">
-                  {activeTab === 'tweets' && "When you post tweets, they'll show up here."}
-                  {activeTab === 'replies' && "When you reply to tweets, they'll show up here."}
-                  {activeTab === 'media' && "When you post photos and videos, they'll show up here."}
-                  {activeTab === 'likes' && "When you like tweets, they'll show up here."}
-                </p>
+                {userTweets.map((tweet) => (
+                  <TweetCard 
+                    key={tweet.id} 
+                    tweet={tweet}
+                  />
+                ))}
               </div>
-              {activeTab === 'tweets' && !username && (
-                <Button onClick={() => navigate('/')}>
-                  Post your first tweet
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+            ) : (
+              <Card className="shadow-none border-none">
+                <CardContent className="p-8 text-center">
+                  <div className="space-y-4">
+                    <div className="w-16 h-16 mx-auto bg-muted rounded-full flex items-center justify-center">
+                      <Users className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-semibold mb-2">No tweets yet</h3>
+                      <p className="text-muted-foreground">
+                        {isMyProfile ? "When you post tweets, they'll show up here." : `@${username} hasn't posted any tweets yet.`}
+                      </p>
+                    </div>
+                    {isMyProfile && (
+                      <Button onClick={() => navigate('/')}>
+                        Post your first tweet
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'replies' && (
+          <Card className="shadow-none border-none">
+            <CardContent className="p-8 text-center">
+              <div className="space-y-4">
+                <div className="w-16 h-16 mx-auto bg-muted rounded-full flex items-center justify-center">
+                  <Users className="w-8 h-8 text-muted-foreground" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold mb-2">No replies yet</h3>
+                  <p className="text-muted-foreground">
+                    When you reply to tweets, they'll show up here.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {activeTab === 'media' && (
+          <Card className="shadow-none border-none">
+            <CardContent className="p-8 text-center">
+              <div className="space-y-4">
+                <div className="w-16 h-16 mx-auto bg-muted rounded-full flex items-center justify-center">
+                  <Users className="w-8 h-8 text-muted-foreground" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold mb-2">No media yet</h3>
+                  <p className="text-muted-foreground">
+                    When you post photos and videos, they'll show up here.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {activeTab === 'likes' && (
+          <Card className="shadow-none border-none">
+            <CardContent className="p-8 text-center">
+              <div className="space-y-4">
+                <div className="w-16 h-16 mx-auto bg-muted rounded-full flex items-center justify-center">
+                  <Users className="w-8 h-8 text-muted-foreground" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold mb-2">No likes yet</h3>
+                  <p className="text-muted-foreground">
+                    When you like tweets, they'll show up here.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   )

@@ -15,8 +15,8 @@ alwaysApply: false
    ```
 
 ## Development Commands
-- **Frontend**: `bun run devf` - Start Vite dev server
-- **Backend**: `bun run dev` - Start Hono server with hot reload
+- **Frontend**: `cd frontend; bun run devf` - Start Vite dev server
+- **Backend**: `cd backend; bun run dev` - Start Hono server with hot reload
 - **Database**: 
   - `cd backend; bun run db:generate` - Generate migrations
   - `cd backend; bun run db:migrate` - Run migrations
