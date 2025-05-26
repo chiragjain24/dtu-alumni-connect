@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { MoreHorizontal, Heart, MessageCircle, Repeat2, Share } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import type { Tweet } from '@/types/types'
 
 interface TweetCardProps {
@@ -10,6 +11,7 @@ interface TweetCardProps {
   onLike?: () => void
   onRetweet?: () => void
   onReply?: () => void
+  disableNavigation?: boolean // For when used in tweet detail page
 }
 
 export function TweetCard({ 
@@ -19,7 +21,9 @@ export function TweetCard({
   onLike,
   onRetweet,
   onReply,
+  disableNavigation = false,
 }: TweetCardProps) {
+  const navigate = useNavigate()
   const formatTimeAgo = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -31,10 +35,24 @@ export function TweetCard({
     return `${Math.floor(diffInSeconds / 86400)}d`;
   };
 
+  const handleTweetClick = (e: React.MouseEvent) => {
+    // Don't navigate if clicking on interactive elements
+    if ((e.target as HTMLElement).closest('button')) {
+      return;
+    }
+    
+    if (!disableNavigation) {
+      navigate(`/tweet/${tweet.id}`);
+    }
+  };
+
   return (
-    <div className="p-4 hover:bg-accent/50 transition-colors cursor-pointer border-b border-border">
+    <div 
+      className="p-4 hover:bg-accent/50 transition-colors cursor-pointer border-b border-border"
+      onClick={handleTweetClick}
+    >
       <div className="flex space-x-3">
-        <Avatar className="w-12 h-12">
+        <Avatar className="w-10 h-10">
           <AvatarImage src={tweet.authorImage || undefined} alt={`${tweet.authorName} avatar`} />
           <AvatarFallback>
             {tweet.authorName?.split(' ').map((n: string) => n[0]).join('').toUpperCase()}

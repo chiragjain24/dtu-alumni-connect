@@ -6,7 +6,7 @@ export interface CreateTweetData {
   parentTweetId?: string;
 }
 
-// Timeline tweets hook
+// Timeline tweets query
 export function useTimeline() {
   return useQuery({
     queryKey: ['tweets', 'timeline'],
@@ -18,10 +18,13 @@ export function useTimeline() {
       const data = await response.json();
       return data.tweets;
     },
+    refetchOnWindowFocus: false,
+    refetchInterval: 30000, // 30 seconds
+    staleTime: 10000, // 10 seconds
   });
 }
 
-// Single tweet hook
+// Single tweet query
 export function useTweet(id: string) {
   return useQuery({
     queryKey: ['tweets', id],
@@ -37,10 +40,13 @@ export function useTweet(id: string) {
       };
     },
     enabled: !!id,
+    refetchOnWindowFocus: false,
+    refetchInterval: 30000, // 30 seconds
+    staleTime: 10000, // 10 seconds
   });
 }
 
-// User tweets hook
+// User tweets query
 export function useUserTweets(userId: string) {
   return useQuery({
     queryKey: ['tweets', 'user', userId],
@@ -53,6 +59,7 @@ export function useUserTweets(userId: string) {
       return data.tweets;
     },
     enabled: !!userId,
+    refetchOnWindowFocus: false,
   });
 }
 
@@ -90,7 +97,7 @@ export function useDeleteTweet() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (tweetId: string, ) => {
+    mutationFn: async (tweetId: string) => {
       const response = await api.tweets[':id'].$delete({ param: { id: tweetId } });
       if (!response.ok) {
         throw new Error('Failed to delete tweet');

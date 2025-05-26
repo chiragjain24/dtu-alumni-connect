@@ -7,6 +7,7 @@ import Explore from './pages/Explore'
 import Jobs from './pages/Jobs'
 import Profile from './pages/Profile'
 import Settings from './pages/Settings'
+import TweetDetail from './pages/TweetDetail'
 import RootLayout from './components/layout/root-layout'
 
 // Placeholder components for Phase 2
@@ -137,6 +138,17 @@ function RoutesHandler() {
             <AuthGuard>
               <RootLayout>
                 <Settings />
+              </RootLayout>
+            </AuthGuard>
+          } 
+        />
+
+        <Route 
+          path="/tweet/:id" 
+          element={
+            <AuthGuard>
+              <RootLayout>
+                <TweetDetail />
               </RootLayout>
             </AuthGuard>
           } 

@@ -1,0 +1,176 @@
+import { useParams, useNavigate } from 'react-router-dom'
+import { useEffect } from 'react'
+import { ArrowLeft } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { TweetCard } from '@/components/tweets/tweet-card'
+import { TweetDetailCard } from '@/components/tweets/tweet-detail-card'
+import { TweetComposer } from '@/components/tweets/tweet-composer'
+import { useTweet, useCreateTweet } from '@/lib/queries/tweets'
+import { useSession } from '@/lib/auth-client'
+import Loader from '@/components/loader'
+
+export default function TweetDetail() {
+  const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
+  const { data: session } = useSession()
+  const { data, isLoading, error } = useTweet(id!)
+  const createTweetMutation = useCreateTweet()
+
+  const handleCreateReply = async (content: string) => {
+    if (!id) return
+    await createTweetMutation.mutateAsync({ 
+      content, 
+      parentTweetId: id 
+    })
+  }
+
+  // Scroll to top when tweet changes
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [id])
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen">
+        <div className="sticky top-0 bg-background/80 backdrop-blur-md border-b border-border px-4 py-3">
+          <div className="flex items-center space-x-4">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => navigate(-1)}
+              className="rounded-full p-2"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <h1 className="text-xl font-bold text-foreground">Tweet</h1>
+          </div>
+        </div>
+        <div className="flex justify-center items-center py-8">
+          <Loader />
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !data) {
+    return (
+      <div className="min-h-screen">
+        <div className="sticky top-0 bg-background/80 backdrop-blur-md border-b border-border px-4 py-3">
+          <div className="flex items-center space-x-4">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => navigate(-1)}
+              className="rounded-full p-2"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <h1 className="text-xl font-bold text-foreground">Tweet</h1>
+          </div>
+        </div>
+        <div className="p-6 text-center">
+          <h2 className="text-2xl font-bold text-foreground mb-4">Tweet not found</h2>
+          <p className="text-muted-foreground mb-4">This tweet may have been deleted or doesn't exist.</p>
+          <Button onClick={() => navigate('/')}>Go to Home</Button>
+        </div>
+      </div>
+    )
+  }
+
+  const { tweet, replies } = data
+
+  return (
+    <div className="min-h-screen">
+      {/* Header */}
+      <div className="sticky top-0 bg-background/80 backdrop-blur-md border-b border-border px-4 py-3 z-10">
+        <div className="flex items-center space-x-4">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => navigate(-1)}
+            className="rounded-full p-2"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <h1 className="text-xl font-bold text-foreground">Tweet</h1>
+        </div>
+      </div>
+
+      {/* Parent Tweet (if this is a reply) */}
+      {tweet.parentTweetId && (
+        <div className="border-b border-border">
+          <div className="p-4 text-muted-foreground text-sm">
+            <span>Replying to a tweet</span>
+          </div>
+        </div>
+      )}
+
+      {/* Main Tweet */}
+      <div className="border-b border-border">
+        <TweetDetailCard 
+          tweet={tweet}
+          onLike={() => {
+            // TODO: Implement like functionality
+            console.log('Like tweet:', tweet.id);
+          }}
+          onRetweet={() => {
+            // TODO: Implement retweet functionality
+            console.log('Retweet:', tweet.id);
+          }}
+          onReply={() => {
+            // Scroll to reply composer
+            const replyComposer = document.querySelector('textarea');
+            replyComposer?.focus();
+          }}
+        />
+      </div>
+
+      {/* Reply Composer */}
+      {session?.user && (
+        <div className="border-b border-border">
+          <TweetComposer 
+            user={{
+              name: session.user.name,
+              username: session.user.username || '',
+              image: session.user.image || '',
+            }}
+            placeholder={`Reply to ${tweet.authorName}...`}
+            parentTweetId={tweet.id}
+            onTweet={handleCreateReply}
+            disabled={createTweetMutation.isPending}
+          />
+        </div>
+      )}
+
+      {/* Replies */}
+      <div>
+        {replies.length > 0 ? (
+          <div>
+            {replies.map((reply) => (
+              <TweetCard 
+                key={reply.id} 
+                tweet={reply}
+                onLike={() => {
+                  // TODO: Implement like functionality
+                  console.log('Like reply:', reply.id);
+                }}
+                onRetweet={() => {
+                  // TODO: Implement retweet functionality
+                  console.log('Retweet reply:', reply.id);
+                }}
+                onReply={() => {
+                  // TODO: Implement reply to reply functionality
+                  console.log('Reply to reply:', reply.id);
+                }}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="p-8 text-center">
+            <p className="text-muted-foreground">No replies yet. Be the first to reply!</p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+} 

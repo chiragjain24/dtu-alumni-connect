@@ -4,8 +4,8 @@ import { Calendar, Link as LinkIcon, Building, GraduationCap, Users, Edit, Arrow
 import { Button } from '../components/ui/button'
 import { Avatar } from '../components/ui/avatar'
 import { Card, CardContent } from '../components/ui/card'
-import useGetMyProfile from '@/lib/hooks/get-my-profile'
-import useGetUserProfile from '@/lib/hooks/get-user-profile'
+import useGetMyProfile from '@/lib/queries'
+import useGetUserProfile from '@/lib/queries/users'
 import Loader from '@/components/loader'
 
 export default function Profile() {

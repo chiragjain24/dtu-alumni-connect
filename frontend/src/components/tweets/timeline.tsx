@@ -1,6 +1,6 @@
 import { TweetCard } from './tweet-card';
 import { TweetComposer } from './tweet-composer';
-import { useTimeline, useCreateTweet } from '@/lib/hooks/tweets';
+import { useTimeline, useCreateTweet } from '@/lib/queries/tweets';
 import { useSession } from '@/lib/auth-client';
 import Loader from '@/components/loader';
 

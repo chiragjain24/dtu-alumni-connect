@@ -9,7 +9,7 @@ import { z } from 'zod';
 
 // Validation schemas
 const createTweetSchema = z.object({
-  content: z.string().min(1).max(280),
+  content: z.string().min(1).max(2048),
   parentTweetId: z.string().optional(),
 });
 

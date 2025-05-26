@@ -25,6 +25,7 @@ export function TweetComposer({
 }: TweetComposerProps) {
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const handleSubmit = async () => {
     if (!content.trim() || isSubmitting) return;
@@ -33,6 +34,7 @@ export function TweetComposer({
     try {
       await onTweet?.(content);
       setContent('');
+      setIsExpanded(false);
     } finally {
       setIsSubmitting(false);
     }
@@ -43,7 +45,7 @@ export function TweetComposer({
   return (
     <div className="border-b border-border p-4">
       <div className="flex space-x-3">
-        <Avatar className="w-12 h-12">
+        <Avatar className="w-10 h-10">
           <AvatarImage src={user.image || undefined} alt={`${user.name} avatar`} />
           <AvatarFallback>
             {user.name.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
@@ -51,43 +53,55 @@ export function TweetComposer({
         </Avatar>
         
         <div className="flex-1">
-          <Textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder={placeholder}
-            className=" text-lg border-none resize-none focus-visible:ring-0 p-0"
-            maxLength={280}
-          />
-          
-          <div className="flex justify-between items-center mt-3">
-            <div className="flex space-x-4 text-primary">
-              <Button variant="ghost" size="sm" className="rounded-full p-2" disabled>
-                <Image className="w-5 h-5" />
-              </Button>
-              <Button variant="ghost" size="sm" className="rounded-full p-2" disabled>
-                <Smile className="w-5 h-5" />
-              </Button>
-              <Button variant="ghost" size="sm" className="rounded-full p-2" disabled>
-                <Calendar className="w-5 h-5" />
-              </Button>
-              <Button variant="ghost" size="sm" className="rounded-full p-2" disabled>
-                <MapPin className="w-5 h-5" />
-              </Button>
-            </div>
+          <div className="relative">
+            <Textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              onFocus={() => setIsExpanded(true)}
+              placeholder={placeholder}
+              className="md:text-base border-none min-h-12 shadow-none resize-none focus-visible:ring-0 p-0 pr-20"
+              maxLength={2048}
+            />
             
-            <div className="flex items-center space-x-3">
-              <span className={`text-sm ${content.length > 260 ? 'text-red-500' : 'text-muted-foreground'}`}>
-                {280 - content.length}
-              </span>
+            {!isExpanded && (
               <Button 
-                className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-6 py-2 rounded-full"
+                className="absolute right-2 top-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-4 py-1 rounded-full text-sm"
                 disabled={isDisabled}
                 onClick={handleSubmit}
               >
                 {isSubmitting ? 'Posting...' : parentTweetId ? 'Reply' : 'Tweet'}
               </Button>
-            </div>
+            )}
           </div>
+          
+          {isExpanded && (
+            <div className="flex justify-between items-center mt-3">
+              <div className="flex space-x-4 text-primary">
+                <Button variant="ghost" size="sm" className="rounded-full p-2" disabled>
+                  <Image className="w-5 h-5" />
+                </Button>
+                <Button variant="ghost" size="sm" className="rounded-full p-2" disabled>
+                  <Smile className="w-5 h-5" />
+                </Button>
+                <Button variant="ghost" size="sm" className="rounded-full p-2" disabled>
+                  <Calendar className="w-5 h-5" />
+                </Button>
+                <Button variant="ghost" size="sm" className="rounded-full p-2" disabled>
+                  <MapPin className="w-5 h-5" />
+                </Button>
+              </div>
+              
+              <div className="flex items-center space-x-3">
+                <Button 
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-6 py-2 rounded-full"
+                  disabled={isDisabled}
+                  onClick={handleSubmit}
+                >
+                  {isSubmitting ? 'Posting...' : parentTweetId ? 'Reply' : 'Tweet'}
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -9,7 +9,7 @@ import { Textarea } from '../components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
 import { api } from '../lib/utils'
-import useGetMyProfile from '@/lib/hooks/get-my-profile'
+import useGetMyProfile from '@/lib/queries'
 import Loader from '@/components/loader'
 
 const DTU_BRANCHES = [
