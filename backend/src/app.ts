@@ -17,7 +17,7 @@ const app = new Hono<{
 app.use('*', cors({
   origin: 'http://localhost:5173', // allow Vite frontend,
   allowHeaders: ["Content-Type", "Authorization"],
-  allowMethods: ["POST", "GET", "OPTIONS", "PATCH"],
+  allowMethods: ["POST", "GET", "OPTIONS", "PATCH", "DELETE"],
   exposeHeaders: ["Content-Length"],
   maxAge: 600,
   credentials: true,

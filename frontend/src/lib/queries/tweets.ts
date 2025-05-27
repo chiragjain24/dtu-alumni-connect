@@ -195,12 +195,54 @@ export function useDeleteTweet() {
       }
       return await response.json();
     },
-    onSuccess: (_, tweetId) => {
-      queryClient.invalidateQueries({ queryKey: ['tweets', 'timeline'] });
-      queryClient.invalidateQueries({ queryKey: ['tweets', tweetId] });
+    onMutate: async (tweetId: string) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['tweets'] });
+      
+      // Get the tweet that's being deleted for rollback
+      const tweetData = queryClient.getQueryData(['tweets', tweetId]);
+      
+      // Remove tweet from all cached queries optimistically
+      const cacheKeys = [
+        ['tweets', 'timeline'],
+        ['tweets', tweetId],
+      ];
 
-      // // Invalidate all tweet-related queries
-      // queryClient.invalidateQueries({ queryKey: ['tweets'] });
+      const previousData: Record<string, any> = {};
+
+      cacheKeys.forEach(key => {
+        const keyString = key.join('-');
+        const currentData = queryClient.getQueryData(key);
+        if (currentData) {
+          previousData[keyString] = currentData;
+          
+          if (key[0] === 'tweets' && key[1] === 'timeline') {
+            // Remove from timeline
+            queryClient.setQueryData(key, (old: Tweet[]) => 
+              old ? old.filter((tweet: Tweet) => tweet.id !== tweetId) : []
+            );
+          } else if (key[1] === tweetId) {
+            // Remove the tweet detail
+            queryClient.setQueryData(key, null);
+          }
+        }
+      });
+
+      return { previousData, cacheKeys, tweetData };
+    },
+    onError: (_, __, context) => {
+      // Rollback on error
+      if (context) {
+        context.cacheKeys.forEach(key => {
+          const keyString = key.join('-');
+          if (context.previousData[keyString]) {
+            queryClient.setQueryData(key, context.previousData[keyString]);
+          }
+        });
+      }
+    },
+    onSuccess: (_, tweetId) => {
+      queryClient.removeQueries({ queryKey: ['tweets', tweetId] });
     },
   });
 }

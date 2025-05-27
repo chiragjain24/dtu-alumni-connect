@@ -1,9 +1,16 @@
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
-import { MoreHorizontal, Heart, MessageCircle, Repeat2, Share } from 'lucide-react'
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu'
+import { MoreHorizontal, Heart, MessageCircle, Repeat2, Share, Trash2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import type { Tweet } from '@/types/types'
-import { useLikeTweet, useRetweetTweet } from '@/lib/queries/tweets'
+import { useLikeTweet, useRetweetTweet, useDeleteTweet } from '@/lib/queries/tweets'
+import { useSession } from '@/lib/auth-client'
 
 interface TweetCardProps {
   tweet: Tweet
@@ -13,9 +20,13 @@ export function TweetCard({
   tweet, 
 }: TweetCardProps) {
   const navigate = useNavigate()
+  const { data: session } = useSession()
   const likeMutation = useLikeTweet()
   const retweetMutation = useRetweetTweet()
+  const deleteMutation = useDeleteTweet()
   
+  // Check if current user is the author of this tweet
+  const isAuthor = session?.user.id === tweet.authorId
 
   const handleLike = async () => {
     await likeMutation.mutateAsync({tweet, isLike: !tweet.isLikedByUser})
@@ -27,6 +38,13 @@ export function TweetCard({
 
   const handleReply = () => {
     navigate(`/tweet/${tweet.id}`)
+  }
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (window.confirm('Are you sure you want to delete this tweet?')) {
+      await deleteMutation.mutateAsync(tweet.id)
+    }
   }
   
   const formatTimeAgo = (dateString: string) => {
@@ -71,9 +89,25 @@ export function TweetCard({
             <span className="text-muted-foreground">·</span>
             <span className="text-muted-foreground">{formatTimeAgo(tweet.createdAt)}</span>
             <div className="ml-auto">
-              <Button variant="ghost" size="sm" className="rounded-full">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="rounded-full">
+                    <MoreHorizontal className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {isAuthor && (
+                    <DropdownMenuItem 
+                      onClick={handleDelete}
+                      className="text-red-600 focus:text-red-600"
+                      disabled={deleteMutation.isPending}
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      {deleteMutation.isPending ? 'Deleting...' : 'Delete tweet'}
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
           

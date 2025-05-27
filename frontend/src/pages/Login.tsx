@@ -1,9 +1,16 @@
-import { signIn } from '../lib/auth-client'
+import { signIn, useSession } from '../lib/auth-client'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 export default function Login() {
+  const { data: session } = useSession()
+  const navigate = useNavigate()
+  if(session) {
+    navigate('/')
+  }
+
   const [isLoading, setIsLoading] = useState(false)
   const handleGoogleSignIn = async () => {
     try {
