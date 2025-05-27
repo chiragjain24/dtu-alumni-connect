@@ -44,7 +44,7 @@ export function TweetDetailCard({
 
   const handleDelete = async () => {
     if (window.confirm('Are you sure you want to delete this tweet?')) {
-      await deleteMutation.mutateAsync(tweet.id)
+      await deleteMutation.mutateAsync(tweet)
       // Navigate back to home after deleting the tweet
       navigate('/')
     }

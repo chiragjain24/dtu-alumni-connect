@@ -188,24 +188,23 @@ export function useDeleteTweet() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (tweetId: string) => {
-      const response = await api.tweets[':id'].$delete({ param: { id: tweetId } });
+    mutationFn: async (tweet: Tweet) => {
+      const response = await api.tweets[':id'].$delete({ param: { id: tweet.id } });
       if (!response.ok) {
         throw new Error('Failed to delete tweet');
       }
       return await response.json();
     },
-    onMutate: async (tweetId: string) => {
+    onMutate: async (tweet: Tweet) => {
       // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: ['tweets'] });
-      
-      // Get the tweet that's being deleted for rollback
-      const tweetData = queryClient.getQueryData(['tweets', tweetId]);
+    
       
       // Remove tweet from all cached queries optimistically
       const cacheKeys = [
         ['tweets', 'timeline'],
-        ['tweets', tweetId],
+        ['tweets', tweet.id],
+        ...(tweet.parentTweetId ? [['tweets', tweet.parentTweetId]] : [])
       ];
 
       const previousData: Record<string, any> = {};
@@ -219,16 +218,31 @@ export function useDeleteTweet() {
           if (key[0] === 'tweets' && key[1] === 'timeline') {
             // Remove from timeline
             queryClient.setQueryData(key, (old: Tweet[]) => 
-              old ? old.filter((tweet: Tweet) => tweet.id !== tweetId) : []
+              old ? old.filter((oldTweet: Tweet) => oldTweet.id !== tweet.id) : []
             );
-          } else if (key[1] === tweetId) {
+          } else if (key[1] === tweet.id) {
             // Remove the tweet detail
             queryClient.setQueryData(key, null);
+          } else if (key[1] === tweet.parentTweetId) {
+            // Remove from parent tweet's replies
+            queryClient.setQueryData(key, (old: any) => {
+              if (!old) return old;
+              
+              // Handle tweet detail page structure (has tweet + replies)
+              if (old.tweet && old.replies) {
+                return {
+                  ...old,
+                  replies: old.replies.filter((reply: Tweet) => reply.id !== tweet.id)
+                };
+              }
+              
+              return old;
+            });
           }
         }
       });
 
-      return { previousData, cacheKeys, tweetData };
+      return { previousData, cacheKeys, tweet };
     },
     onError: (_, __, context) => {
       // Rollback on error

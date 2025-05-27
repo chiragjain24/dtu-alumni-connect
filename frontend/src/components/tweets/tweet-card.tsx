@@ -6,11 +6,12 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu'
-import { MoreHorizontal, Heart, MessageCircle, Repeat2, Share, Trash2 } from 'lucide-react'
+import { MoreHorizontal, Heart, MessageCircle, Repeat2, Share, Trash2, Copy, ExternalLink } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import type { Tweet } from '@/types/types'
 import { useLikeTweet, useRetweetTweet, useDeleteTweet } from '@/lib/queries/tweets'
 import { useSession } from '@/lib/auth-client'
+import { toast } from 'sonner'
 
 interface TweetCardProps {
   tweet: Tweet
@@ -43,7 +44,40 @@ export function TweetCard({
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation()
     if (window.confirm('Are you sure you want to delete this tweet?')) {
-      await deleteMutation.mutateAsync(tweet.id)
+      await deleteMutation.mutateAsync(tweet)
+    }
+  }
+
+  const handleShare = async (e: React.MouseEvent, shareType: 'copy' | 'native') => {
+    e.stopPropagation()
+    
+    const tweetUrl = `${window.location.origin}/tweet/${tweet.id}`
+    const shareText = `Check out this tweet: "${tweet.content.slice(0, 100)}${tweet.content.length > 100 ? '...' : ''}"`
+    
+    try {
+      switch (shareType) {
+        case 'copy':
+          await navigator.clipboard.writeText(tweetUrl)
+          toast.success('Tweet link copied to clipboard!')
+          break
+            
+        case 'native':
+          if ('share' in navigator && typeof navigator.share === 'function') {
+            await navigator.share({
+              title: 'DTU Alumni Connect',
+              text: shareText,
+              url: tweetUrl,
+            })
+          } else {
+            // Fallback to copy
+            await navigator.clipboard.writeText(tweetUrl)
+            toast.success('Tweet link copied to clipboard!')
+          }
+          break
+      }
+    } catch (error) {
+      toast.error('Failed to share tweet')
+      console.error('Share error:', error)
     }
   }
   
@@ -156,13 +190,29 @@ export function TweetCard({
               <span className="text-sm">{tweet.likesCount}</span>
             </Button>
             
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="flex items-center space-x-2 text-muted-foreground hover:text-primary rounded-full"
-            >
-              <Share className="w-4 h-4" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="flex items-center space-x-2 text-muted-foreground hover:text-primary rounded-full"
+                >
+                  <Share className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={(e) => handleShare(e, 'copy')}>
+                  <Copy className="w-4 h-4 mr-2" />
+                  Copy link
+                </DropdownMenuItem>
+                {'share' in navigator && typeof navigator.share === 'function' && (
+                  <DropdownMenuItem onClick={(e) => handleShare(e, 'native')}>
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    Share via...
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>
