@@ -138,28 +138,23 @@ This roadmap breaks down the DTU Alumni Connect development into testable phases
 ---
 
 ## Phase 4: Social Interactions (Week 4)
-**Goal**: Likes, retweets, replies, and follows
+**Goal**: Likes, retweets, replies
 
 ### Backend Tasks
 1. **Interaction Database Schema**
    - Likes table
-   - Retweets table  
-   - Follows table
+   - Retweets table
    - Update tweet stats
 
 2. **Interaction API Routes**
    - `POST /api/tweets/:id/like` - Like/unlike tweet
    - `POST /api/tweets/:id/retweet` - Retweet functionality
-   - `POST /api/users/:id/follow` - Follow/unfollow user
-   - `GET /api/users/:id/followers` - Get followers
-   - `GET /api/users/:id/following` - Get following
 
 ### Frontend Tasks
 1. **Interaction Components**
    - Like button with animation
    - Retweet button and modal
    - Reply button and composer
-   - Follow/unfollow button
 
 2. **Thread System**
    - Reply threads display
@@ -167,15 +162,11 @@ This roadmap breaks down the DTU Alumni Connect development into testable phases
    - Thread navigation
    - Quote tweets
 
-3. **Social Features**
-   - Following/followers lists
-   - Notifications (basic)
 
 ### Testable Results
 - Users can like/unlike tweets
 - Retweet functionality works
 - Reply to reply (nested threads)
-- Follow/unfollow system functional
 
 ---
 

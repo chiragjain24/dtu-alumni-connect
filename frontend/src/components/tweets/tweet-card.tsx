@@ -3,7 +3,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { MoreHorizontal, Heart, MessageCircle, Repeat2, Share } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import type { Tweet } from '@/types/types'
-import { useState } from 'react'
+import { useLikeTweet, useRetweetTweet } from '@/lib/queries/tweets'
 
 interface TweetCardProps {
   tweet: Tweet
@@ -13,16 +13,20 @@ export function TweetCard({
   tweet, 
 }: TweetCardProps) {
   const navigate = useNavigate()
-  const [isLiked, setIsLiked] = useState(false)
-  const [isRetweeted, setIsRetweeted] = useState(false)
-  const handleLike = () => {
-    setIsLiked(!isLiked)
+  const likeMutation = useLikeTweet()
+  const retweetMutation = useRetweetTweet()
+  
+
+  const handleLike = async () => {
+    await likeMutation.mutateAsync({tweet, isLike: !tweet.isLikedByUser})
   }
-  const handleRetweet = () => {
-    setIsRetweeted(!isRetweeted)
+
+  const handleRetweet = async () => {
+    await retweetMutation.mutateAsync(tweet)
   }
+
   const handleReply = () => {
-    console.log('Reply to:', tweet.id);
+    navigate(`/tweet/${tweet.id}`)
   }
   
   const formatTimeAgo = (dateString: string) => {
@@ -92,11 +96,12 @@ export function TweetCard({
               variant="ghost" 
               size="sm" 
               className={`flex items-center space-x-2 rounded-full ${
-                isRetweeted 
+                tweet.isRetweetedByUser 
                   ? 'text-green-600' 
                   : 'text-muted-foreground hover:text-green-600'
               }`}
               onClick={handleRetweet}
+              disabled={retweetMutation.isPending}
             >
               <Repeat2 className="w-4 h-4" />
               <span className="text-sm">{tweet.retweetsCount}</span>
@@ -106,13 +111,14 @@ export function TweetCard({
               variant="ghost" 
               size="sm" 
               className={`flex items-center space-x-2 rounded-full ${
-                isLiked 
+                tweet.isLikedByUser 
                   ? 'text-red-500' 
                   : 'text-muted-foreground hover:text-red-500'
               }`}
               onClick={handleLike}
+              disabled={likeMutation.isPending}
             >
-              <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
+              <Heart className={`w-4 h-4 ${tweet.isLikedByUser ? 'fill-current' : ''}`} />
               <span className="text-sm">{tweet.likesCount}</span>
             </Button>
             

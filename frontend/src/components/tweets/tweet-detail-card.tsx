@@ -2,26 +2,30 @@ import { Button } from '@/components/ui/button'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { MoreHorizontal, Heart, MessageCircle, Repeat2, Share } from 'lucide-react'
 import type { Tweet } from '@/types/types'
-import { useState } from 'react'
+import { useLikeTweet, useRetweetTweet } from '@/lib/queries/tweets'
 
 interface TweetDetailCardProps {
   tweet: Tweet
+  onReply?: () => void
 }
 
 export function TweetDetailCard({ 
-  tweet, 
+  tweet,
+  onReply
 }: TweetDetailCardProps) {
-  const [isLiked, setIsLiked] = useState(false)
-  const [isRetweeted, setIsRetweeted] = useState(false)
-  
-  const handleLike = () => {
-    setIsLiked(!isLiked)
+  const likeMutation = useLikeTweet()
+  const retweetMutation = useRetweetTweet()
+
+  const handleLike = async () => {
+    await likeMutation.mutateAsync({tweet, isLike: !tweet.isLikedByUser})
   }
-  const handleRetweet = () => {
-    setIsRetweeted(!isRetweeted)
+
+  const handleRetweet = async () => {
+    await retweetMutation.mutateAsync(tweet)
   }
+
   const handleReply = () => {
-    console.log('Reply to:', tweet.id);
+    onReply?.()
   };
   
   const formatFullDate = (dateString: string) => {
@@ -71,9 +75,8 @@ export function TweetDetailCard({
         <span className="text-muted-foreground text-sm">{formatFullDate(tweet.createdAt)}</span>
       </div>
 
-
       {/* Action Buttons */}
-      <div className="flex items-center justify-around max-w-md">
+      <div className="flex items-center justify-between max-w-md pb-4 border-b border-border">
         <Button 
           variant="ghost" 
           size="sm" 
@@ -92,11 +95,12 @@ export function TweetDetailCard({
           variant="ghost" 
           size="sm" 
           className={`flex items-center space-x-2 rounded-full p-3 ${
-            isRetweeted 
+            tweet.isRetweetedByUser 
               ? 'text-green-600' 
               : 'text-muted-foreground hover:text-green-600'
           }`}
           onClick={handleRetweet}
+          disabled={retweetMutation.isPending}
         >
           <Repeat2 className="w-5 h-5" />
           {tweet.retweetsCount > 0 && (
@@ -110,13 +114,14 @@ export function TweetDetailCard({
           variant="ghost" 
           size="sm" 
           className={`flex items-center space-x-2 rounded-full p-3 ${
-            isLiked 
+            tweet.isLikedByUser 
               ? 'text-red-500' 
               : 'text-muted-foreground hover:text-red-500'
           }`}
           onClick={handleLike}
+          disabled={likeMutation.isPending}
         >
-          <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
+          <Heart className={`w-5 h-5 ${tweet.isLikedByUser ? 'fill-current' : ''}`} />
           {tweet.likesCount > 0 && (
             <span className="text-muted-foreground text-sm">
               {tweet.likesCount}

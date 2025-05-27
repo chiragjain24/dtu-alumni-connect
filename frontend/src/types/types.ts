@@ -1,7 +1,6 @@
 export interface Tweet {
     id: string;
     content: string;
-    authorId: string;
     parentTweetId?: string | null;
     isRetweet: boolean;
     originalTweetId?: string | null;
@@ -10,7 +9,10 @@ export interface Tweet {
     repliesCount: number;
     createdAt: string;
     updatedAt: string;
+    authorId: string;
     authorName: string | null;
     authorUsername: string | null;
     authorImage: string | null;
+    isLikedByUser?: boolean;
+    isRetweetedByUser?: boolean;
 }

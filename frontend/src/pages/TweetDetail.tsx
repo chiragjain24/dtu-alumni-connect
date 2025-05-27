@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { TweetCard } from '@/components/tweets/tweet-card'
@@ -15,6 +15,7 @@ export default function TweetDetail() {
   const { data: session } = useSession()
   const { data, isLoading, error } = useTweet(id!)
   const createTweetMutation = useCreateTweet()
+  const replyComposerRef = useRef<HTMLDivElement>(null)
 
   const handleCreateReply = async (content: string) => {
     if (!id) return
@@ -22,6 +23,10 @@ export default function TweetDetail() {
       content, 
       parentTweetId: id 
     })
+  }
+
+  const handleReplyClick = () => {
+    replyComposerRef.current?.querySelector('textarea')?.focus();
   }
 
   // Scroll to top when tweet changes
@@ -109,12 +114,13 @@ export default function TweetDetail() {
       <div className="border-b border-border">
         <TweetDetailCard 
           tweet={tweet}
+          onReply={handleReplyClick}
         />
       </div>
 
       {/* Reply Composer */}
       {session?.user && (
-        <div className="border-b border-border">
+        <div ref={replyComposerRef} className="border-b border-border">
           <TweetComposer 
             user={{
               name: session.user.name,
