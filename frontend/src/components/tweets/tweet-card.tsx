@@ -103,7 +103,7 @@ export function TweetCard({
 
   return (
     <div 
-      className="p-4 hover:bg-accent/50 transition-colors cursor-pointer border-b border-border"
+      className="px-4 pb-1 pt-3 hover:bg-accent/50 transition-colors cursor-pointer border-b border-border"
       onClick={handleTweetClick}
     >
       <div className="flex space-x-3">

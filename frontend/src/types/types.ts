@@ -15,4 +15,5 @@ export interface Tweet {
     authorImage: string | null;
     isLikedByUser?: boolean;
     isRetweetedByUser?: boolean;
+    replies?: Tweet[]; // For nested thread structure
 }

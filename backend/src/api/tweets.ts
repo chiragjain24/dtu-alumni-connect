@@ -245,7 +245,7 @@ const app = new Hono<{
           )
         )
       `)
-      .orderBy(asc(tweets.createdAt)); // Chronological order for threading
+      .orderBy(desc(tweets.createdAt)); // Chronological order for threading
 
     // Build nested structure - only direct replies to the main tweet
     const nestedReplies = buildNestedReplies(allReplies, id);
