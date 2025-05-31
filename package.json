@@ -5,11 +5,22 @@
   "scripts": {
     "dev": "cd backend; bun run dev",
     "devf": "cd frontend; bun run dev",
+    "dev:all": "concurrently \"bun run dev\" \"bun run devf\"",
+    "build": "bun run build:backend && bun run build:frontend",
+    "build:frontend": "cd frontend && bun run build",
+    "build:backend": "cd backend && bun run build",
     "install:f": "cd frontend; bun install",
-    "install:b": "cd backend; bun install"
+    "install:b": "cd backend; bun install",
+    "install:all": "bun install && bun run install:f && bun run install:b",
+    "clean": "rm -rf frontend/dist backend/dist",
+    "start": "cd backend && bun run start",
+    "preview": "cd frontend && bun run preview"
   },
   "workspaces": [
     "frontend",
     "backend"
-  ]
+  ],
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
 }

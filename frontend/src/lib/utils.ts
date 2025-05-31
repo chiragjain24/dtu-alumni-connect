@@ -1,7 +1,7 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { hc } from 'hono/client'
-import { type AppType } from '@backend/src/app'
+import type { AppType } from '@backend/src/app'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))

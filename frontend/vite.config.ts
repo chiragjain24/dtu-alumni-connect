@@ -12,5 +12,15 @@ export default defineConfig({
       "@backend": path.resolve(__dirname, "../backend"),
     },
   },
-  
+  preview: {
+    port: 5173,
+  },
+  build: {
+    rollupOptions: {
+      external: (id) => {
+        // Exclude any backend imports from the bundle
+        return id.includes('../backend') || id.includes('@backend')
+      }
+    }
+  }
 })
