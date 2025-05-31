@@ -2,10 +2,11 @@ import { Hono } from 'hono';
 import { db } from '../db';
 import { tweets, likes, retweets } from '../db/schema/tweets';
 import { user as users } from '../db/schema/auth';
-import { eq, desc, and, sql, isNull, asc } from 'drizzle-orm';
+import { eq, desc, and, sql, isNull } from 'drizzle-orm';
 import { HTTPException } from 'hono/http-exception';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
+import { Tweet } from '../types/types';
 
 // Validation schemas
 const createTweetSchema = z.object({
@@ -29,16 +30,6 @@ const requireAuth = async (c: any, next: any) => {
   }
   await next();
 };
-
-// Helper function to build nested tweet threads
-function buildNestedReplies(allReplies: any[], parentId: string): any[] {
-  const directReplies = allReplies.filter(reply => reply.parentTweetId === parentId);
-  
-  return directReplies.map(reply => ({
-    ...reply,
-    replies: buildNestedReplies(allReplies, reply.id)
-  }));
-}
 
 const app = new Hono<{
     Variables: {
@@ -163,94 +154,158 @@ const app = new Hono<{
   const { id } = c.req.valid('param');
 
   try {
-    // Get main tweet with user interaction status in single query
-    const [tweet] = await db
-      .select({
-        id: tweets.id,
-        content: tweets.content,
-        authorId: tweets.authorId,
-        parentTweetId: tweets.parentTweetId,
-        isRetweet: tweets.isRetweet,
-        originalTweetId: tweets.originalTweetId,
-        likesCount: tweets.likesCount,
-        retweetsCount: tweets.retweetsCount,
-        repliesCount: tweets.repliesCount,
-        createdAt: tweets.createdAt,
-        updatedAt: tweets.updatedAt,
-        authorName: users.name,
-        authorUsername: users.username,
-        authorImage: users.image,
-        isLikedByUser: sql<boolean>`CASE WHEN ${likes.userId} IS NOT NULL THEN true ELSE false END`,
-        isRetweetedByUser: sql<boolean>`CASE WHEN ${retweets.userId} IS NOT NULL THEN true ELSE false END`,
-      })
-      .from(tweets)
-      .leftJoin(users, eq(tweets.authorId, users.id))
-      .leftJoin(likes, and(
-        eq(likes.tweetId, tweets.id),
-        eq(likes.userId, currentUser!.id)
-      ))
-      .leftJoin(retweets, and(
-        eq(retweets.tweetId, tweets.id),
-        eq(retweets.userId, currentUser!.id)
-      ))
-      .where(eq(tweets.id, id))
-      .limit(1);
+    const [[tweet], parentTweets, allReplies] = await Promise.all([
+      // Query 1: Get main tweet with user interaction status
+      db
+        .select({
+          id: tweets.id,
+          content: tweets.content,
+          authorId: tweets.authorId,
+          parentTweetId: tweets.parentTweetId,
+          isRetweet: tweets.isRetweet,
+          originalTweetId: tweets.originalTweetId,
+          likesCount: tweets.likesCount,
+          retweetsCount: tweets.retweetsCount,
+          repliesCount: tweets.repliesCount,
+          createdAt: tweets.createdAt,
+          updatedAt: tweets.updatedAt,
+          authorName: users.name,
+          authorUsername: users.username,
+          authorImage: users.image,
+          isLikedByUser: sql<boolean>`CASE WHEN ${likes.userId} IS NOT NULL THEN true ELSE false END`,
+          isRetweetedByUser: sql<boolean>`CASE WHEN ${retweets.userId} IS NOT NULL THEN true ELSE false END`,
+        })
+        .from(tweets)
+        .leftJoin(users, eq(tweets.authorId, users.id))
+        .leftJoin(likes, and(
+          eq(likes.tweetId, tweets.id),
+          eq(likes.userId, currentUser!.id)
+        ))
+        .leftJoin(retweets, and(
+          eq(retweets.tweetId, tweets.id),
+          eq(retweets.userId, currentUser!.id)
+        ))
+        .where(eq(tweets.id, id))
+        .limit(1),
+
+      // Query 2: Get parent tweets in the thread
+      db
+        .select({
+          id: tweets.id,
+          content: tweets.content,
+          authorId: tweets.authorId,
+          parentTweetId: tweets.parentTweetId,
+          isRetweet: tweets.isRetweet,
+          originalTweetId: tweets.originalTweetId,
+          likesCount: tweets.likesCount,
+          retweetsCount: tweets.retweetsCount,
+          repliesCount: tweets.repliesCount,
+          createdAt: tweets.createdAt,
+          updatedAt: tweets.updatedAt,
+          authorName: users.name,
+          authorUsername: users.username,
+          authorImage: users.image,
+          isLikedByUser: sql<boolean>`CASE WHEN ${likes.userId} IS NOT NULL THEN true ELSE false END`,
+          isRetweetedByUser: sql<boolean>`CASE WHEN ${retweets.userId} IS NOT NULL THEN true ELSE false END`,
+        })
+        .from(tweets)
+        .leftJoin(users, eq(tweets.authorId, users.id))
+        .leftJoin(likes, and(
+          eq(likes.tweetId, tweets.id),
+          eq(likes.userId, currentUser!.id)
+        ))
+        .leftJoin(retweets, and(
+          eq(retweets.tweetId, tweets.id),
+          eq(retweets.userId, currentUser!.id)
+        ))
+        .where(sql`
+          tweets.id IN (
+            WITH RECURSIVE parent_tree AS (
+              -- Base case: Start with the direct parent of the current tweet
+              SELECT parent_tweet_id as id, 1 as level
+              FROM tweets 
+              WHERE tweets.id = ${id} AND parent_tweet_id IS NOT NULL
+              
+              UNION ALL
+              
+              -- Recursive case: For each parent found, get its parent
+              -- This continues until we reach the root tweet (no parent) or max depth i.e 10
+              SELECT t.parent_tweet_id as id, pt.level + 1 as level
+              FROM tweets t
+              INNER JOIN parent_tree pt ON t.id = pt.id
+              WHERE t.parent_tweet_id IS NOT NULL AND pt.level < 10
+            )
+            SELECT id FROM parent_tree
+          )
+        `)
+        .orderBy(tweets.createdAt), // Chronological order (oldest first)
+
+      // Query 3: Get ALL replies in the thread (not just direct replies)
+      db
+        .select({
+          id: tweets.id,
+          content: tweets.content,
+          authorId: tweets.authorId,
+          parentTweetId: tweets.parentTweetId,
+          isRetweet: tweets.isRetweet,
+          originalTweetId: tweets.originalTweetId,
+          likesCount: tweets.likesCount,
+          retweetsCount: tweets.retweetsCount,
+          repliesCount: tweets.repliesCount,
+          createdAt: tweets.createdAt,
+          updatedAt: tweets.updatedAt,
+          authorName: users.name,
+          authorUsername: users.username,
+          authorImage: users.image,
+          isLikedByUser: sql<boolean>`CASE WHEN ${likes.userId} IS NOT NULL THEN true ELSE false END`,
+          isRetweetedByUser: sql<boolean>`CASE WHEN ${retweets.userId} IS NOT NULL THEN true ELSE false END`,
+        })
+        .from(tweets)
+        .leftJoin(users, eq(tweets.authorId, users.id))
+        .leftJoin(likes, and(
+          eq(likes.tweetId, tweets.id),
+          eq(likes.userId, currentUser!.id)
+        ))
+        .leftJoin(retweets, and(
+          eq(retweets.tweetId, tweets.id),
+          eq(retweets.userId, currentUser!.id)
+        ))
+        .where(sql`
+          parent_tweet_id IS NOT NULL AND (
+            parent_tweet_id = ${id} OR
+            EXISTS (
+              WITH RECURSIVE reply_tree AS (
+                SELECT id, parent_tweet_id, 1 as level FROM tweets WHERE parent_tweet_id = ${id}
+                UNION ALL
+                SELECT t.id, t.parent_tweet_id, rt.level + 1 as level
+                FROM tweets t
+                INNER JOIN reply_tree rt ON t.parent_tweet_id = rt.id
+                WHERE rt.level < 10
+              )
+              SELECT 1 FROM reply_tree WHERE reply_tree.id = tweets.id
+            )
+          )
+        `)
+        .orderBy(desc(tweets.createdAt)) // Chronological order for threading
+    ]);
 
     if (!tweet) {
       throw new HTTPException(404, { message: 'Tweet not found' });
     }
 
-    // Get ALL replies in the thread (not just direct replies)
-    const allReplies = await db
-      .select({
-        id: tweets.id,
-        content: tweets.content,
-        authorId: tweets.authorId,
-        parentTweetId: tweets.parentTweetId,
-        isRetweet: tweets.isRetweet,
-        originalTweetId: tweets.originalTweetId,
-        likesCount: tweets.likesCount,
-        retweetsCount: tweets.retweetsCount,
-        repliesCount: tweets.repliesCount,
-        createdAt: tweets.createdAt,
-        updatedAt: tweets.updatedAt,
-        authorName: users.name,
-        authorUsername: users.username,
-        authorImage: users.image,
-        isLikedByUser: sql<boolean>`CASE WHEN ${likes.userId} IS NOT NULL THEN true ELSE false END`,
-        isRetweetedByUser: sql<boolean>`CASE WHEN ${retweets.userId} IS NOT NULL THEN true ELSE false END`,
-      })
-      .from(tweets)
-      .leftJoin(users, eq(tweets.authorId, users.id))
-      .leftJoin(likes, and(
-        eq(likes.tweetId, tweets.id),
-        eq(likes.userId, currentUser!.id)
-      ))
-      .leftJoin(retweets, and(
-        eq(retweets.tweetId, tweets.id),
-        eq(retweets.userId, currentUser!.id)
-      ))
-      .where(sql`
-        parent_tweet_id IS NOT NULL AND (
-          parent_tweet_id = ${id} OR
-          EXISTS (
-            WITH RECURSIVE reply_tree AS (
-              SELECT id, parent_tweet_id FROM tweets WHERE parent_tweet_id = ${id}
-              UNION ALL
-              SELECT t.id, t.parent_tweet_id 
-              FROM tweets t
-              INNER JOIN reply_tree rt ON t.parent_tweet_id = rt.id
-            )
-            SELECT 1 FROM reply_tree WHERE reply_tree.id = tweets.id
-          )
-        )
-      `)
-      .orderBy(desc(tweets.createdAt)); // Chronological order for threading
-
+    // Helper Recursive function to build nested tweet threads
+    const buildNestedReplies = (allReplies: Tweet[], parentId: string): Tweet[]=>{
+      const directReplies = allReplies.filter(reply => reply.parentTweetId === parentId);
+      
+      return directReplies.map(reply => ({
+        ...reply,
+        replies: buildNestedReplies(allReplies, reply.id)
+      }));
+    }
     // Build nested structure - only direct replies to the main tweet
     const nestedReplies = buildNestedReplies(allReplies, id);
 
-    return c.json({ tweet, replies: nestedReplies });
+    return c.json({ tweet, parentTweets, replies: nestedReplies });
   } catch (error) {
     console.error('Error fetching tweet:', error);
     if (error instanceof HTTPException) {

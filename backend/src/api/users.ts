@@ -23,6 +23,10 @@ const userParamsSchema = z.object({
   id: z.string(),
 })
 
+const usernameParamsSchema = z.object({
+  username: z.string(),
+})
+
 // Middleware to require authentication
 const requireAuth = async (c: any, next: any) => {
   const user = c.get('user')
@@ -115,6 +119,43 @@ export const usersRoute = new Hono<{
 })
 
 // Get public user profile by username
+.get('/:username', requireAuth, zValidator('param', usernameParamsSchema), async (c) => {
+  const { username } = c.req.valid('param')
+
+  try {
+    const userProfile = await db
+      .select({
+        id: user.id,
+        name: user.name,
+        username: user.username,
+        bio: user.bio,
+        image: user.image,
+        graduationYear: user.graduationYear,
+        branch: user.branch,
+        currentCompany: user.currentCompany,
+        currentRole: user.currentRole,
+        linkedinUrl: user.linkedinUrl,
+        isAlumniVerified: user.isAlumniVerified,
+        createdAt: user.createdAt,
+      })
+      .from(user)
+      .where(eq(user.username, username))
+      .limit(1)
+
+    if (userProfile.length === 0) {
+      return c.json({ error: 'User not found' }, 404)
+    }
+
+    const profile = userProfile[0]
+
+    return c.json({ user: profile })
+  } catch (error) {
+    console.error('Error fetching user profile:', error)
+    return c.json({ error: 'Internal server error' }, 500)
+  }
+})
+
+// Get public user profile by id
 .get('/:id', requireAuth, zValidator('param', userParamsSchema), async (c) => {
   const { id } = c.req.valid('param')
 

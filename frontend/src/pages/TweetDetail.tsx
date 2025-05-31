@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { TweetCard } from '@/components/tweets/tweet-card'
 import { TweetDetailCard } from '@/components/tweets/tweet-detail-card'
+import { TweetThreadCard } from '@/components/tweets/tweet-thread-card'
 import { TweetComposer } from '@/components/tweets/tweet-composer'
 import { useTweet, useCreateTweet } from '@/lib/queries/tweets'
 import { useSession } from '@/lib/auth-client'
@@ -82,7 +83,7 @@ export default function TweetDetail() {
     )
   }
 
-  const { tweet, replies } = data
+  const { tweet, parentTweets, replies } = data
 
   return (
     <div className="min-h-screen">
@@ -101,12 +102,16 @@ export default function TweetDetail() {
         </div>
       </div>
 
-      {/* Parent Tweet (if this is a reply) */}
-      {tweet.parentTweetId && (
-        <div className="border-b border-border">
-          <div className="p-4 text-muted-foreground text-sm">
-            <span>Replying to a tweet</span>
-          </div>
+      {/* Parent Tweets (Thread Context) */}
+      {parentTweets.length > 0 && (
+        <div>
+          {parentTweets.map((parentTweet, index) => (
+            <TweetThreadCard 
+              key={parentTweet.id} 
+              tweet={parentTweet}
+              isLast={index === parentTweets.length - 1}
+            />
+          ))}
         </div>
       )}
 

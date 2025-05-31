@@ -69,12 +69,18 @@ function updateTweetAcrossAllCaches(
       });
 
     } 
-    // Tweet + replies
-    else if(currentData.tweet && currentData.replies) {
+    // Tweet + parentTweets + replies
+    else if(currentData.tweet && currentData.parentTweets && currentData.replies) {
       if(currentData.tweet.id === tweetId) {
         updatedData = {
           ...currentData,
           tweet: updater(currentData.tweet)
+        }
+      }
+      else if(currentData.parentTweets.some((t: Tweet) => t.id === tweetId)) {
+        updatedData = {
+          ...currentData,
+          parentTweets: currentData.parentTweets.map((t: Tweet) => t.id === tweetId ? updater(t) : t)
         }
       }
       else {
@@ -157,6 +163,7 @@ export function useTweet(id: string) {
       const data = await response.json();
       return {
         tweet: data.tweet,
+        parentTweets: data.parentTweets,
         replies: data.replies,
       };
     },
@@ -257,13 +264,21 @@ export function useDeleteTweet() {
           queryClient.setQueryData(queryKey, filteredData);
         }
 
-        // Handle Tweet + replies
-        else if (currentData.tweet && currentData.replies) {
+        // Handle Tweet + parentTweets + replies
+        else if (currentData.tweet && currentData.parentTweets && currentData.replies) {
           // If the main tweet is being deleted
           if (currentData.tweet.id === tweet.id) {
             queryClient.setQueryData(queryKey, null);
-          } else {
-            // Remove from replies recursively
+          } 
+          // Remove from parentTweets
+          else if (currentData.parentTweets.some((t: Tweet) => t.id === tweet.id)) {
+            queryClient.setQueryData(queryKey, {
+              ...currentData,
+              parentTweets: currentData.parentTweets.filter((t: Tweet) => t.id !== tweet.id)
+            });
+          } 
+          // Remove from replies recursively
+          else {
             const removeFromReplies = (replies: Tweet[]): Tweet[] =>
               replies
                 .filter((reply: Tweet) => reply.id !== tweet.id)
