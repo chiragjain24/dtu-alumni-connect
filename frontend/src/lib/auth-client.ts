@@ -3,7 +3,7 @@ import { createAuthClient } from "better-auth/react";
 import { inferAdditionalFields } from "better-auth/client/plugins";
 
 export const authClient = createAuthClient({
-  baseURL: "http://localhost:3000", // Backend URL,
+  baseURL: import.meta.env.VITE_BACKEND_URL, // Backend URL
   plugins: [inferAdditionalFields<typeof auth>()],
 });
 

@@ -17,7 +17,7 @@ export default function Login() {
       setIsLoading(true)
       await signIn.social({
         provider: 'google',
-        callbackURL: 'http://localhost:5173/'
+        callbackURL: import.meta.env.VITE_FRONTEND_URL!
       })
     } catch (error) {
       console.error('Login failed:', error)

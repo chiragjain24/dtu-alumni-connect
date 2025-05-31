@@ -15,7 +15,7 @@ export const auth = betterAuth({
     }),
     user:{
         additionalFields: {
-            profileSetupCompleted: { type: "boolean",required: false },
+            profileSetupCompleted: { type: "boolean", required: false },
             username: { type: "string",required: false },
         }
     },
@@ -29,8 +29,7 @@ export const auth = betterAuth({
         enabled: false
     },
     trustedOrigins: [
-        "http://localhost:5173",
-        process.env.CORS_ORIGIN as string,
+        process.env.FRONTEND_URL as string,
     ],
     socialProviders: { 
         google: {

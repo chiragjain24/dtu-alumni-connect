@@ -15,12 +15,12 @@ const app = new Hono<{
 }>().basePath('/api')
 
 app.use('*', cors({
-  origin: 'http://localhost:5173', // allow Vite frontend,
+  origin: process.env.FRONTEND_URL!, // allow Vite frontend,
   allowHeaders: ["Content-Type", "Authorization"],
   allowMethods: ["POST", "GET", "OPTIONS", "PATCH", "DELETE"],
   exposeHeaders: ["Content-Length"],
   maxAge: 600,
-  credentials: true,
+  credentials: true, // Allow cross-origin requests with cookies
 }))
 app.use('*', logger())
 

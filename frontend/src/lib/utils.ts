@@ -7,7 +7,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export const api = hc<AppType>('http://localhost:3000/',{
+export const api = hc<AppType>(import.meta.env.VITE_BACKEND_URL!,{
   fetch: ((input: RequestInfo | URL, init?: RequestInit) => {
     return fetch(input, { 
       ...init, 

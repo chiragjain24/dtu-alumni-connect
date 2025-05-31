@@ -6,7 +6,7 @@ import { eq, desc, and, sql, isNull } from 'drizzle-orm';
 import { HTTPException } from 'hono/http-exception';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
-import { Tweet } from '../types/types';
+import { type Tweet } from '../types/types';
 
 // Validation schemas
 const createTweetSchema = z.object({
@@ -414,10 +414,7 @@ const app = new Hono<{
 })
 
 // POST /api/tweets/:id/like - Like/unlike tweet
-.post('/:id/like', requireAuth,
-    zValidator('param', tweetParamsSchema),
-    zValidator('json', z.object({ isLike: z.boolean()})),
-async (c) => {
+.post('/:id/like', requireAuth, zValidator('param', tweetParamsSchema), zValidator('json', z.object({ isLike: z.boolean()})), async (c) => {
   const currentUser = c.get('user');
   const { id } = c.req.valid('param');
   const { isLike } = c.req.valid('json');
