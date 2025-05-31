@@ -7,93 +7,123 @@ export interface CreateTweetData {
   parentTweetId?: string;
 }
 
-// Cache update utilities
-function createTweetUpdater(tweetId: string, updater: (tweet: Tweet) => Tweet) {
-  return (data: any): any => {
-    if (!data) return data;
-    
-    // For timeline (array of tweets)
-    if (Array.isArray(data)) {
-      return data.map((t: Tweet) => 
-        t.id === tweetId ? updater(t) : t
-      );
-    }
-    
-    // For single tweet
-    if (data.id === tweetId) {
-      return updater(data);
-    }
-
-    // For tweet detail page (has tweet + replies structure)
-    if (data.tweet && data.replies) {
-      return {
-        ...data,
-        tweet: data.tweet.id === tweetId ? updater(data.tweet) : data.tweet,
-        replies: data.replies.map((reply: Tweet) => 
-          reply.id === tweetId ? updater(reply) : reply
-        )
-      };
-    }
-
-    return data;
-  };
-}
-
-function updateTweetInteraction(
-  queryClient: any, 
-  tweet: Tweet, 
-  type: 'like' | 'retweet', 
-  newState: boolean
-) {
-  const updater = createTweetUpdater(tweet.id, (t: Tweet) => {
-    if (type === 'like') {
-      return {
-        ...t,
-        isLikedByUser: newState,
-        likesCount: newState ? t.likesCount + 1 : Math.max(0, t.likesCount - 1)
-      };
-    } else {
-      return {
-        ...t,
-        isRetweetedByUser: newState,
-        retweetsCount: newState ? t.retweetsCount + 1 : Math.max(0, t.retweetsCount - 1)
-      };
-    }
-  });
-
-  // Get all potentially affected cache entries
-  const cacheKeys = [
-    ['tweets', 'timeline'],
-    ['tweets', tweet.id],
-    ['tweets', 'user', tweet.authorId],
-    ...(tweet.parentTweetId ? [['tweets', tweet.parentTweetId]] : [])
-  ];
-
+function updateTweetAcrossAllCaches(
+  queryClient: any,
+  tweetId: string,
+  updater: (tweet: Tweet) => Tweet
+): { previousData: Record<string, any>, cacheKeys: string[][] } {
   const previousData: Record<string, any> = {};
-
-  // Update all cache entries
-  cacheKeys.forEach(key => {
-    const keyString = key.join('-');
-    const currentData = queryClient.getQueryData(key);
-    if (currentData) {
-      // Store in previousData so that it can be used in rollback
-      previousData[keyString] = currentData;
-      queryClient.setQueryData(key, updater(currentData));
-    }
+  const cacheKeys: string[][] = [];
+  
+  // Get all query cache entries
+  const allQueries = queryClient.getQueryCache().getAll();
+  
+  // Find all tweet-related queries that might contain our tweet
+  const tweetQueries = allQueries.filter((query: any) => {
+    const queryKey = query.queryKey;
+    return queryKey[0] === 'tweets' && query.state.data;
   });
 
-  return { previousData, cacheKeys, tweet };
+  function updateNestedReplies(replies: Tweet[]): Tweet[] {
+    return replies.map(reply => {
+        if (reply.id === tweetId) {
+          return updater(reply);
+        }
+        // Handle nested replies recursively
+        if (reply.replies && reply.replies.length > 0) {
+          return {
+            ...reply,
+            replies: updateNestedReplies(reply.replies)
+          };
+        }
+        return reply;
+    });
+  }
+  
+  tweetQueries.forEach((query: any) => {
+    const queryKey = query.queryKey as string[];
+    const currentData = query.state.data;
+    
+    if (!currentData) return;
+    
+    const keyString = queryKey.join('-');
+    previousData[keyString] = currentData;
+    cacheKeys.push(queryKey);
+    
+    let updatedData;
+    
+    // Handle Array of Tweets
+    if (Array.isArray(currentData)) {
+      updatedData = currentData.map(tweet => {
+          if (tweet.id === tweetId) {
+            return updater(tweet);
+          }
+          // Handle nested replies recursively
+          if (tweet.replies && tweet.replies.length > 0) {
+            return {
+              ...tweet,
+              replies: updateNestedReplies(tweet.replies)
+            };
+          }
+          return tweet;
+      });
+
+    } 
+    // Tweet + replies
+    else if(currentData.tweet && currentData.replies) {
+      if(currentData.tweet.id === tweetId) {
+        updatedData = {
+          ...currentData,
+          tweet: updater(currentData.tweet)
+        }
+      }
+      else {
+        updatedData = {
+          ...currentData,
+          replies: updateNestedReplies(currentData.replies)
+        }
+      }
+    }
+    
+    // Only update if data actually changed
+    if (updatedData !== currentData) {
+      queryClient.setQueryData(queryKey, updatedData);
+    }
+  
+  });
+  
+  return { previousData, cacheKeys };
 }
 
-function rollbackTweetInteraction(
-  queryClient: any, 
-  context: { previousData: Record<string, any>, cacheKeys: any[][], tweet: Tweet }
+function rollbackTweetUpdates(
+  queryClient: any,
+  context: { previousData: Record<string, any>, cacheKeys: string[][] }
 ) {
-  context.cacheKeys.forEach(key => {
-    const keyString = key.join('-');
+  context.cacheKeys.forEach(queryKey => {
+    const keyString = queryKey.join('-');
     if (context.previousData[keyString]) {
-      queryClient.setQueryData(key, context.previousData[keyString]);
+      queryClient.setQueryData(queryKey, context.previousData[keyString]);
     }
+  });
+}
+
+function createLikeUpdater(isLiked: boolean) {
+  return (tweet: Tweet): Tweet => ({
+    ...tweet,
+    isLikedByUser: isLiked,
+    likesCount: isLiked 
+      ? tweet.likesCount + 1 
+      : Math.max(0, tweet.likesCount - 1)
+  });
+}
+
+function createRetweetUpdater(isRetweeted: boolean) {
+  return (tweet: Tweet): Tweet => ({
+    ...tweet,
+    isRetweetedByUser: isRetweeted,
+    retweetsCount: isRetweeted 
+      ? tweet.retweetsCount + 1 
+      : Math.max(0, tweet.retweetsCount - 1)
   });
 }
 
@@ -199,44 +229,52 @@ export function useDeleteTweet() {
       // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: ['tweets'] });
     
-      
-      // Remove tweet from all cached queries optimistically
-      const cacheKeys = [
-        ['tweets', 'timeline'],
-        ['tweets', tweet.id],
-        ...(tweet.parentTweetId ? [['tweets', tweet.parentTweetId]] : [])
-      ];
-
       const previousData: Record<string, any> = {};
+      const cacheKeys: string[][] = [];
+      
+      // Get all query cache entries
+      const allQueries = queryClient.getQueryCache().getAll();
+      
+      // Find all tweet-related queries that might contain our tweet
+      const tweetQueries = allQueries.filter((query: any) => {
+        const queryKey = query.queryKey;
+        return queryKey[0] === 'tweets' && query.state.data;
+      });
+      
+      tweetQueries.forEach((query: any) => {
+        const queryKey = query.queryKey as string[];
+        const currentData = query.state.data;
+        
+        if (!currentData) return;
+        
+        const keyString = queryKey.join('-');
+        previousData[keyString] = currentData;
+        cacheKeys.push(queryKey);
+        
+        // Handle Array of Tweets
+        if (Array.isArray(currentData)) {
+          const filteredData = currentData.filter((t: Tweet) => t.id !== tweet.id);
+          queryClient.setQueryData(queryKey, filteredData);
+        }
 
-      cacheKeys.forEach(key => {
-        const keyString = key.join('-');
-        const currentData = queryClient.getQueryData(key);
-        if (currentData) {
-          previousData[keyString] = currentData;
-          
-          if (key[0] === 'tweets' && key[1] === 'timeline') {
-            // Remove from timeline
-            queryClient.setQueryData(key, (old: Tweet[]) => 
-              old ? old.filter((oldTweet: Tweet) => oldTweet.id !== tweet.id) : []
-            );
-          } else if (key[1] === tweet.id) {
-            // Remove the tweet detail
-            queryClient.setQueryData(key, null);
-          } else if (key[1] === tweet.parentTweetId) {
-            // Remove from parent tweet's replies
-            queryClient.setQueryData(key, (old: any) => {
-              if (!old) return old;
-              
-              // Handle tweet detail page structure (has tweet + replies)
-              if (old.tweet && old.replies) {
-                return {
-                  ...old,
-                  replies: old.replies.filter((reply: Tweet) => reply.id !== tweet.id)
-                };
-              }
-              
-              return old;
+        // Handle Tweet + replies
+        else if (currentData.tweet && currentData.replies) {
+          // If the main tweet is being deleted
+          if (currentData.tweet.id === tweet.id) {
+            queryClient.setQueryData(queryKey, null);
+          } else {
+            // Remove from replies recursively
+            const removeFromReplies = (replies: Tweet[]): Tweet[] =>
+              replies
+                .filter((reply: Tweet) => reply.id !== tweet.id)
+                .map((reply: Tweet) => ({
+                  ...reply,
+                  replies: reply.replies ? removeFromReplies(reply.replies) : []
+                }));
+            
+            queryClient.setQueryData(queryKey, {
+              ...currentData,
+              replies: removeFromReplies(currentData.replies)
             });
           }
         }
@@ -255,8 +293,8 @@ export function useDeleteTweet() {
         });
       }
     },
-    onSuccess: (_, tweetId) => {
-      queryClient.removeQueries({ queryKey: ['tweets', tweetId] });
+    onSuccess: (_, tweet) => {
+      queryClient.removeQueries({ queryKey: ['tweets', tweet.id] });
     },
   });
 }
@@ -281,12 +319,12 @@ export function useLikeTweet() {
       await queryClient.cancelQueries({ queryKey: ['tweets'] });
       
       // Optimistically update cache
-      return updateTweetInteraction(queryClient, tweet, 'like', isLike);
+      return updateTweetAcrossAllCaches(queryClient, tweet.id, createLikeUpdater(isLike));
     },
     onError: (_, __, context) => {
       // Rollback on error
       if (context) {
-        rollbackTweetInteraction(queryClient, context);
+        rollbackTweetUpdates(queryClient, context);
       }
     }
     // No onSuccess or onSettled - optimistic updates are sufficient
@@ -314,12 +352,12 @@ export function useRetweetTweet() {
       const isRetweet = !tweet.isRetweetedByUser;
       
       // Optimistically update cache
-      return updateTweetInteraction(queryClient, tweet, 'retweet', isRetweet);
+      return updateTweetAcrossAllCaches(queryClient, tweet.id, createRetweetUpdater(isRetweet));
     },
     onError: (_, __, context) => {
       // Rollback on error
       if (context) {
-        rollbackTweetInteraction(queryClient, context);
+        rollbackTweetUpdates(queryClient, context);
       }
     }
     // No onSuccess or onSettled - optimistic updates are sufficient

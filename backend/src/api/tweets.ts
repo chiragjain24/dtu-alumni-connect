@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { db } from '../db';
 import { tweets, likes, retweets } from '../db/schema/tweets';
 import { user as users } from '../db/schema/auth';
-import { eq, desc, and, sql, isNull } from 'drizzle-orm';
+import { eq, desc, and, sql, isNull, asc } from 'drizzle-orm';
 import { HTTPException } from 'hono/http-exception';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
@@ -29,6 +29,16 @@ const requireAuth = async (c: any, next: any) => {
   }
   await next();
 };
+
+// Helper function to build nested tweet threads
+function buildNestedReplies(allReplies: any[], parentId: string): any[] {
+  const directReplies = allReplies.filter(reply => reply.parentTweetId === parentId);
+  
+  return directReplies.map(reply => ({
+    ...reply,
+    replies: buildNestedReplies(allReplies, reply.id)
+  }));
+}
 
 const app = new Hono<{
     Variables: {
@@ -190,8 +200,8 @@ const app = new Hono<{
       throw new HTTPException(404, { message: 'Tweet not found' });
     }
 
-    // Get replies with user interaction status in single query
-    const replies = await db
+    // Get ALL replies in the thread (not just direct replies)
+    const allReplies = await db
       .select({
         id: tweets.id,
         content: tweets.content,
@@ -220,10 +230,27 @@ const app = new Hono<{
         eq(retweets.tweetId, tweets.id),
         eq(retweets.userId, currentUser!.id)
       ))
-      .where(eq(tweets.parentTweetId, id))
-      .orderBy(desc(tweets.createdAt));
+      .where(sql`
+        parent_tweet_id IS NOT NULL AND (
+          parent_tweet_id = ${id} OR
+          EXISTS (
+            WITH RECURSIVE reply_tree AS (
+              SELECT id, parent_tweet_id FROM tweets WHERE parent_tweet_id = ${id}
+              UNION ALL
+              SELECT t.id, t.parent_tweet_id 
+              FROM tweets t
+              INNER JOIN reply_tree rt ON t.parent_tweet_id = rt.id
+            )
+            SELECT 1 FROM reply_tree WHERE reply_tree.id = tweets.id
+          )
+        )
+      `)
+      .orderBy(asc(tweets.createdAt)); // Chronological order for threading
 
-    return c.json({ tweet, replies });
+    // Build nested structure - only direct replies to the main tweet
+    const nestedReplies = buildNestedReplies(allReplies, id);
+
+    return c.json({ tweet, replies: nestedReplies });
   } catch (error) {
     console.error('Error fetching tweet:', error);
     if (error instanceof HTTPException) {
