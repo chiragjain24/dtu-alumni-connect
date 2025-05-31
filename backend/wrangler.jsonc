@@ -1,0 +1,37 @@
+{
+  // Cloudflare Worker configuration for DTU Alumni Backend
+  "name": "dtu-alumni-backend",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-05-31",
+  "compatibility_flags": ["nodejs_compat"],
+  
+  // Enable logging for development and production
+  "observability": {
+    "enabled": true
+  },
+  
+  // Enable tail logs for real-time debugging
+  "tail_consumers": [
+    {
+      "service": "dtu-alumni-backend"
+    }
+  ],
+  
+  // Environment-specific configurations
+  "env": {
+    "production": {
+      "logpush": true,
+      "FRONTEND_URL": "http://localhost:5173",
+      "BETTER_AUTH_URL": "https://dtu-alumni-backend.chiragjain78382.workers.dev",
+      "NODE_ENV": "production"
+    }
+  }
+  
+  // Optional: Custom domain
+  // "routes": [
+  //   {
+  //     "pattern": "api.yourdomain.com/*",
+  //     "zone_name": "yourdomain.com"
+  //   }
+  // ]
+} 
