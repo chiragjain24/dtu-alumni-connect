@@ -5,36 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1748030715061,
-      "tag": "0000_cuddly_vapor",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1748031891935,
-      "tag": "0001_fast_pandemic",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1748031907583,
-      "tag": "0002_sparkling_malice",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1748091835676,
-      "tag": "0003_typical_songbird",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1748177827015,
-      "tag": "0004_aromatic_falcon",
+      "when": 1748752300470,
+      "tag": "0000_tan_butterfly",
       "breakpoints": true
     }
   ]
