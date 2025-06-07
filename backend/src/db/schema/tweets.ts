@@ -9,6 +9,7 @@ export const tweets = pgTable("tweets", {
   parentTweetId: text('parent_tweet_id'), // For replies
   isRetweet: boolean('is_retweet').$defaultFn(() => false).notNull(),
   originalTweetId: text('original_tweet_id'), // For retweets
+  mediaUrls: text('media_urls').array(), // Array of image URLs from UploadThing
   likesCount: integer('likes_count').$defaultFn(() => 0).notNull(),
   retweetsCount: integer('retweets_count').$defaultFn(() => 0).notNull(),
   repliesCount: integer('replies_count').$defaultFn(() => 0).notNull(),

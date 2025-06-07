@@ -1,0 +1,1 @@
+ALTER TABLE "tweets" ADD COLUMN "media_urls" text[];

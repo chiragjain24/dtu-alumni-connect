@@ -12,6 +12,7 @@ import { type Tweet } from '../types/types';
 const createTweetSchema = z.object({
   content: z.string().min(1).max(2048),
   parentTweetId: z.string().optional(),
+  mediaUrls: z.array(z.string().url()).max(4).optional(), // Array of image URLs, max 4
 });
 
 const tweetParamsSchema = z.object({
@@ -51,6 +52,7 @@ const app = new Hono<{
         parentTweetId: tweets.parentTweetId,
         isRetweet: tweets.isRetweet,
         originalTweetId: tweets.originalTweetId,
+        mediaUrls: tweets.mediaUrls,
         likesCount: tweets.likesCount,
         retweetsCount: tweets.retweetsCount,
         repliesCount: tweets.repliesCount,
@@ -87,7 +89,7 @@ const app = new Hono<{
 // POST /api/tweets - Create new tweet
 .post('/', requireAuth, zValidator('json', createTweetSchema), async (c) => {
   const currentUser = c.get('user');
-  const { content, parentTweetId } = c.req.valid('json');
+  const { content, parentTweetId, mediaUrls } = c.req.valid('json');
 
   try {
     // If it's a reply, verify parent exists and increment reply count  
@@ -113,6 +115,7 @@ const app = new Hono<{
         content,
         authorId: currentUser!.id,
         parentTweetId,
+        mediaUrls,
       })
       .returning();
 
@@ -124,6 +127,7 @@ const app = new Hono<{
       parentTweetId: newTweet.parentTweetId,
       isRetweet: newTweet.isRetweet,
       originalTweetId: newTweet.originalTweetId,
+      mediaUrls: newTweet.mediaUrls,
       likesCount: newTweet.likesCount,
       retweetsCount: newTweet.retweetsCount,
       repliesCount: newTweet.repliesCount,
@@ -164,6 +168,7 @@ const app = new Hono<{
           parentTweetId: tweets.parentTweetId,
           isRetweet: tweets.isRetweet,
           originalTweetId: tweets.originalTweetId,
+          mediaUrls: tweets.mediaUrls,
           likesCount: tweets.likesCount,
           retweetsCount: tweets.retweetsCount,
           repliesCount: tweets.repliesCount,
@@ -197,6 +202,7 @@ const app = new Hono<{
           parentTweetId: tweets.parentTweetId,
           isRetweet: tweets.isRetweet,
           originalTweetId: tweets.originalTweetId,
+          mediaUrls: tweets.mediaUrls,
           likesCount: tweets.likesCount,
           retweetsCount: tweets.retweetsCount,
           repliesCount: tweets.repliesCount,
@@ -249,6 +255,7 @@ const app = new Hono<{
           parentTweetId: tweets.parentTweetId,
           isRetweet: tweets.isRetweet,
           originalTweetId: tweets.originalTweetId,
+          mediaUrls: tweets.mediaUrls,
           likesCount: tweets.likesCount,
           retweetsCount: tweets.retweetsCount,
           repliesCount: tweets.repliesCount,
@@ -378,6 +385,7 @@ const app = new Hono<{
         parentTweetId: tweets.parentTweetId,
         isRetweet: tweets.isRetweet,
         originalTweetId: tweets.originalTweetId,
+        mediaUrls: tweets.mediaUrls,
         likesCount: tweets.likesCount,
         retweetsCount: tweets.retweetsCount,
         repliesCount: tweets.repliesCount,

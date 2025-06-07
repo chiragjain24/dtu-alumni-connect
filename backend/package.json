@@ -19,6 +19,7 @@
     "dotenv": "^16.5.0",
     "drizzle-orm": "^0.43.1",
     "hono": "^4.7.10",
+    "uploadthing": "^7.7.2",
     "zod": "^3.25.28"
   },
   "devDependencies": {

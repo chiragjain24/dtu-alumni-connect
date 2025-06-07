@@ -3,6 +3,7 @@ import { logger } from 'hono/logger'
 import { expensesRoute } from './api/expenses'
 import { usersRoute } from './api/users'
 import { tweetsRoute } from './api/tweets'
+import { uploadthingRoute } from './api/uploadthing'
 import { cors } from 'hono/cors'
 import { auth } from './lib/auth'
 import { HTTPException } from 'hono/http-exception'
@@ -16,7 +17,7 @@ const app = new Hono<{
 
 app.use('*', cors({
   origin: process.env.FRONTEND_URL!, // allow Vite frontend,
-  allowHeaders: ["Content-Type", "Authorization"],
+  allowHeaders: ["Content-Type", "Authorization", "x-uploadthing-package", "x-uploadthing-version"],
   allowMethods: ["POST", "GET", "OPTIONS", "PATCH", "DELETE"],
   exposeHeaders: ["Content-Length"],
   maxAge: 600,
@@ -55,6 +56,7 @@ const apiRoutes = app
   .route('/expenses', expensesRoute)
   .route('/users', usersRoute)
   .route('/tweets', tweetsRoute)
+  .route('/uploadthing', uploadthingRoute)
 
 export default app
 export type AppType = typeof apiRoutes
