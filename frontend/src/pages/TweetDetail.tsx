@@ -9,6 +9,7 @@ import { TweetComposer } from '@/components/tweets/tweet-composer'
 import { useTweet, useCreateTweet } from '@/lib/queries/tweets'
 import { useSession } from '@/lib/auth-client'
 import Loader from '@/components/loader'
+import type { MediaItem } from '@/types/types'
 
 export default function TweetDetail() {
   const { id } = useParams<{ id: string }>()
@@ -18,11 +19,11 @@ export default function TweetDetail() {
   const createTweetMutation = useCreateTweet()
   const replyComposerRef = useRef<HTMLDivElement>(null)
 
-  const handleCreateReply = async (content: string, mediaUrls: string[]) => {
+  const handleCreateReply = async (content: string, mediaItems: MediaItem[]) => {
     if (!id) return
     await createTweetMutation.mutateAsync({ 
       content, 
-      mediaUrls,
+      mediaItems,
       parentTweetId: id
     })
   }

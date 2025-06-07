@@ -3,14 +3,15 @@ import { TweetComposer } from './tweet-composer';
 import { useTimeline, useCreateTweet } from '@/lib/queries/tweets';
 import { useSession } from '@/lib/auth-client';
 import Loader from '@/components/loader';
+import type { MediaItem } from '@/types/types';
 
 export function Timeline() {
   const { data: session } = useSession();
   const { data: tweets, isLoading, error } = useTimeline();
   const createTweetMutation = useCreateTweet();
 
-  const handleCreateTweet = async (content: string, mediaUrls: string[]) => {
-    await createTweetMutation.mutateAsync({ content, mediaUrls });
+  const handleCreateTweet = async (content: string, mediaItems: MediaItem[]) => {
+    await createTweetMutation.mutateAsync({ content, mediaItems });
   };
 
   if (isLoading) {

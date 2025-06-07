@@ -148,7 +148,7 @@ export function TweetCard({
           
           <div className="mt-1">
             <p className="text-foreground whitespace-pre-wrap">{tweet.content}</p>
-            <TweetMedia mediaUrls={tweet.mediaUrls || []} />
+            <TweetMedia mediaItems={tweet.mediaItems || []} />
           </div>
 
           <div className="flex items-center justify-between max-w-md mt-3">

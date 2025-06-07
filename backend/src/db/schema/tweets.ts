@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, integer, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, integer, boolean, jsonb } from "drizzle-orm/pg-core";
 import { user } from "./auth";
 import { relations } from "drizzle-orm";
 
@@ -9,7 +9,13 @@ export const tweets = pgTable("tweets", {
   parentTweetId: text('parent_tweet_id'), // For replies
   isRetweet: boolean('is_retweet').$defaultFn(() => false).notNull(),
   originalTweetId: text('original_tweet_id'), // For retweets
-  mediaUrls: text('media_urls').array(), // Array of image URLs from UploadThing
+  mediaItems: jsonb('media_items').$type<Array<{
+    url: string;
+    type: 'image' | 'document';
+    name: string;
+    size: number;
+    mimeType: string;
+  }>>(),
   likesCount: integer('likes_count').$defaultFn(() => 0).notNull(),
   retweetsCount: integer('retweets_count').$defaultFn(() => 0).notNull(),
   repliesCount: integer('replies_count').$defaultFn(() => 0).notNull(),

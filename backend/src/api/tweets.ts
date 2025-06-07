@@ -7,12 +7,21 @@ import { HTTPException } from 'hono/http-exception';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
 import { type Tweet } from '../types/types';
+import { deleteUploadThingFiles } from '../lib/uploadthing-utils';
 
 // Validation schemas
+const mediaItemSchema = z.object({
+  url: z.string().url(),
+  type: z.enum(['image', 'document']),
+  name: z.string(),
+  size: z.number(),
+  mimeType: z.string(),
+});
+
 const createTweetSchema = z.object({
   content: z.string().min(1).max(2048),
   parentTweetId: z.string().optional(),
-  mediaUrls: z.array(z.string().url()).max(4).optional(), // Array of image URLs, max 4
+  mediaItems: z.array(mediaItemSchema).max(4).optional(),
 });
 
 const tweetParamsSchema = z.object({
@@ -52,7 +61,7 @@ const app = new Hono<{
         parentTweetId: tweets.parentTweetId,
         isRetweet: tweets.isRetweet,
         originalTweetId: tweets.originalTweetId,
-        mediaUrls: tweets.mediaUrls,
+        mediaItems: tweets.mediaItems,
         likesCount: tweets.likesCount,
         retweetsCount: tweets.retweetsCount,
         repliesCount: tweets.repliesCount,
@@ -89,7 +98,7 @@ const app = new Hono<{
 // POST /api/tweets - Create new tweet
 .post('/', requireAuth, zValidator('json', createTweetSchema), async (c) => {
   const currentUser = c.get('user');
-  const { content, parentTweetId, mediaUrls } = c.req.valid('json');
+  const { content, mediaItems, parentTweetId } = c.req.valid('json');
 
   try {
     // If it's a reply, verify parent exists and increment reply count  
@@ -113,9 +122,9 @@ const app = new Hono<{
       .insert(tweets)
       .values({
         content,
+        mediaItems,
         authorId: currentUser!.id,
         parentTweetId,
-        mediaUrls,
       })
       .returning();
 
@@ -127,7 +136,7 @@ const app = new Hono<{
       parentTweetId: newTweet.parentTweetId,
       isRetweet: newTweet.isRetweet,
       originalTweetId: newTweet.originalTweetId,
-      mediaUrls: newTweet.mediaUrls,
+      mediaItems: newTweet.mediaItems,
       likesCount: newTweet.likesCount,
       retweetsCount: newTweet.retweetsCount,
       repliesCount: newTweet.repliesCount,
@@ -168,7 +177,7 @@ const app = new Hono<{
           parentTweetId: tweets.parentTweetId,
           isRetweet: tweets.isRetweet,
           originalTweetId: tweets.originalTweetId,
-          mediaUrls: tweets.mediaUrls,
+          mediaItems: tweets.mediaItems,
           likesCount: tweets.likesCount,
           retweetsCount: tweets.retweetsCount,
           repliesCount: tweets.repliesCount,
@@ -202,7 +211,7 @@ const app = new Hono<{
           parentTweetId: tweets.parentTweetId,
           isRetweet: tweets.isRetweet,
           originalTweetId: tweets.originalTweetId,
-          mediaUrls: tweets.mediaUrls,
+          mediaItems: tweets.mediaItems,
           likesCount: tweets.likesCount,
           retweetsCount: tweets.retweetsCount,
           repliesCount: tweets.repliesCount,
@@ -255,7 +264,7 @@ const app = new Hono<{
           parentTweetId: tweets.parentTweetId,
           isRetweet: tweets.isRetweet,
           originalTweetId: tweets.originalTweetId,
-          mediaUrls: tweets.mediaUrls,
+          mediaItems: tweets.mediaItems,
           likesCount: tweets.likesCount,
           retweetsCount: tweets.retweetsCount,
           repliesCount: tweets.repliesCount,
@@ -334,6 +343,7 @@ const app = new Hono<{
         id: tweets.id,
         authorId: tweets.authorId,
         parentTweetId: tweets.parentTweetId,
+        mediaItems: tweets.mediaItems,
       })
       .from(tweets)
       .where(eq(tweets.id, id))
@@ -347,6 +357,8 @@ const app = new Hono<{
       throw new HTTPException(403, { message: 'Not authorized to delete this tweet' });
     }
 
+    await deleteUploadThingFiles(tweet.mediaItems?.map(item => item.url) || []);
+    
     // If it's a reply, decrement parent's reply count
     if (tweet.parentTweetId) {
       await db
@@ -385,7 +397,7 @@ const app = new Hono<{
         parentTweetId: tweets.parentTweetId,
         isRetweet: tweets.isRetweet,
         originalTweetId: tweets.originalTweetId,
-        mediaUrls: tweets.mediaUrls,
+        mediaItems: tweets.mediaItems,
         likesCount: tweets.likesCount,
         retweetsCount: tweets.retweetsCount,
         repliesCount: tweets.repliesCount,

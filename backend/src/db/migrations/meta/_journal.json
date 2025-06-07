@@ -15,6 +15,20 @@
       "when": 1749297625093,
       "tag": "0001_robust_lockheed",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1749309263292,
+      "tag": "0002_productive_cerise",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1749314058059,
+      "tag": "0003_solid_charles_xavier",
+      "breakpoints": true
     }
   ]
 }

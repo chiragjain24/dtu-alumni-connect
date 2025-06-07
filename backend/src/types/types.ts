@@ -1,10 +1,18 @@
+export interface MediaItem {
+    url: string;
+    type: 'image' | 'document';
+    name: string;
+    size: number;
+    mimeType: string;
+}
+
 export interface Tweet {
     id: string;
     content: string;
     parentTweetId?: string | null;
     isRetweet: boolean;
     originalTweetId?: string | null;
-    mediaUrls: string[] | null;
+    mediaItems: MediaItem[] | null;
     likesCount: number;
     retweetsCount: number;
     repliesCount: number;

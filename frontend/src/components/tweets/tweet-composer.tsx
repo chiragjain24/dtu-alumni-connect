@@ -4,6 +4,9 @@ import { Textarea } from '@/components/ui/textarea'
 import { Image, Smile, Calendar, MapPin } from 'lucide-react'
 import { useState } from 'react'
 import { MediaUpload } from './media-upload'
+import { useUploadThing } from '@/lib/uploadthing'
+import type { MediaItem } from '@/types/types'
+import { toast } from 'sonner'
 
 interface TweetComposerProps {
   user: {
@@ -12,7 +15,7 @@ interface TweetComposerProps {
     image: string
   }
   placeholder?: string
-  onTweet?: (content: string, mediaUrls: string[]) => void
+  onTweet?: (content: string, mediaItems: MediaItem[]) => Promise<void>
   disabled?: boolean
   parentTweetId?: string
 }
@@ -25,21 +28,66 @@ export function TweetComposer({
   parentTweetId
 }: TweetComposerProps) {
   const [content, setContent] = useState('');
-  const [mediaUrls, setMediaUrls] = useState<string[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [showMediaUpload, setShowMediaUpload] = useState(false);
+
+  const { startUpload: startImageUpload } = useUploadThing("tweetImageUploader");
+  const { startUpload: startDocumentUpload } = useUploadThing("tweetDocumentUploader");
 
   const handleSubmit = async () => {
     if (!content.trim() || isSubmitting) return;
     
     setIsSubmitting(true);
     try {
-      await onTweet?.(content, mediaUrls);
+      let mediaItems: MediaItem[] = [];
+      
+      // Upload files if any are selected
+      if (selectedFiles.length > 0) {
+        const imageFiles = selectedFiles.filter(file => file.type.startsWith('image/'));
+        const documentFiles = selectedFiles.filter(file => !file.type.startsWith('image/'));
+
+        let uploadResults = [];
+
+        if (imageFiles.length > 0) {
+          const imageUploadResults = await startImageUpload(imageFiles);
+          if (imageUploadResults) {
+            uploadResults.push(...imageUploadResults);
+          }
+        }
+
+        if (documentFiles.length > 0) {
+          const docUploadResults = await startDocumentUpload(documentFiles);
+          if (docUploadResults) {
+            uploadResults.push(...docUploadResults);
+          }
+        }
+
+        if(uploadResults.length !== selectedFiles.length){
+          throw new Error('Some files failed to upload');
+        }
+
+        if (uploadResults.length > 0) {
+          mediaItems = uploadResults.map(result => ({
+            url: result.ufsUrl,
+            type: result.serverData.type === 'image' ? 'image' : 'document',
+            name: result.name || 'file',
+            size: result.size || 0,
+            mimeType: result.serverData.mimeType || 'application/octet-stream'
+          }));
+        }
+      }
+      
+      await onTweet?.(content, mediaItems);
       setContent('');
-      setMediaUrls([]);
+      setSelectedFiles([]);
       setIsExpanded(false);
       setShowMediaUpload(false);
+      
+    } catch(error){
+      console.error(error);
+      toast.error('Failed to post tweet');
     } finally {
       setIsSubmitting(false);
     }
@@ -83,7 +131,7 @@ export function TweetComposer({
           {showMediaUpload && (
             <div className="mt-3">
               <MediaUpload
-                onMediaChange={setMediaUrls}
+                onFilesChange={setSelectedFiles}
                 disabled={isSubmitting}
                 maxFiles={4}
               />

@@ -6,12 +6,13 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu'
-import { MoreHorizontal, Heart, MessageCircle, Repeat2, Share, Trash2 } from 'lucide-react'
+import { MoreHorizontal, Heart, MessageCircle, Repeat2, Share, Trash2, Copy, ExternalLink } from 'lucide-react'
 import type { Tweet } from '@/types/types'
 import { useLikeTweet, useRetweetTweet, useDeleteTweet } from '@/lib/queries/tweets'
 import { useSession } from '@/lib/auth-client'
 import { useNavigate } from 'react-router-dom'
 import { TweetMedia } from './tweet-media'
+import { toast } from 'sonner'
 
 interface TweetDetailCardProps {
   tweet: Tweet
@@ -48,6 +49,39 @@ export function TweetDetailCard({
       await deleteMutation.mutateAsync(tweet)
       // Navigate back to home after deleting the tweet
       navigate('/')
+    }
+  }
+
+  const handleShare = async (e: React.MouseEvent, shareType: 'copy' | 'native') => {
+    e.stopPropagation()
+    
+    const tweetUrl = `${window.location.origin}/tweet/${tweet.id}`
+    const shareText = `Check out this tweet: "${tweet.content.slice(0, 100)}${tweet.content.length > 100 ? '...' : ''}"`
+    
+    try {
+      switch (shareType) {
+        case 'copy':
+          await navigator.clipboard.writeText(tweetUrl)
+          toast.success('Tweet link copied to clipboard!')
+          break
+            
+        case 'native':
+          if ('share' in navigator && typeof navigator.share === 'function') {
+            await navigator.share({
+              title: 'DTU Alumni Connect',
+              text: shareText,
+              url: tweetUrl,
+            })
+          } else {
+            // Fallback to copy
+            await navigator.clipboard.writeText(tweetUrl)
+            toast.success('Tweet link copied to clipboard!')
+          }
+          break
+      }
+    } catch (error) {
+      toast.error('Failed to share tweet')
+      console.error('Share error:', error)
     }
   }
   
@@ -107,7 +141,7 @@ export function TweetDetailCard({
       {/* Tweet Content - Larger text for detail view */}
       <div className="mb-4">
         <p className="text-foreground text-xl leading-relaxed whitespace-pre-wrap">{tweet.content}</p>
-        <TweetMedia mediaUrls={tweet.mediaUrls || []} />
+        <TweetMedia mediaItems={tweet.mediaItems || []} />
       </div>
 
       {/* Timestamp */}
@@ -126,11 +160,9 @@ export function TweetDetailCard({
             onClick={handleReply}
           >
             <MessageCircle className="w-5 h-5" />
-            {tweet.repliesCount > 0 && (
-              <span className="text-muted-foreground text-sm">
-                {tweet.repliesCount}
-              </span>
-            )}
+            <span className="text-muted-foreground text-sm">
+              {tweet.repliesCount}
+            </span>
           </Button>
           
           <Button 
@@ -145,11 +177,9 @@ export function TweetDetailCard({
               disabled={retweetMutation.isPending}
               >
             <Repeat2 className="w-5 h-5" />
-            {tweet.retweetsCount > 0 && (
-              <span className="text-muted-foreground text-sm">
-                {tweet.retweetsCount}
-              </span>
-            )}
+            <span className="text-muted-foreground text-sm">
+              {tweet.retweetsCount}
+            </span>
           </Button>
           
           <Button 
@@ -164,20 +194,34 @@ export function TweetDetailCard({
             disabled={likeMutation.isPending}
             >
             <Heart className={`w-5 h-5 ${tweet.isLikedByUser ? 'fill-current' : ''}`} />
-            {tweet.likesCount > 0 && (
-              <span className="text-muted-foreground text-sm">
-                {tweet.likesCount}
-              </span>
-            )}
+            <span className="text-muted-foreground text-sm">
+              {tweet.likesCount}
+            </span>
           </Button>
           
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="flex items-center space-x-2 text-muted-foreground hover:text-primary rounded-full p-3"
-            >
-            <Share className="w-5 h-5" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="flex items-center space-x-2 text-muted-foreground hover:text-primary rounded-full p-3"
+              >
+                <Share className="w-5 h-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={(e) => handleShare(e, 'copy')}>
+                <Copy className="w-4 h-4 mr-2" />
+                Copy link
+              </DropdownMenuItem>
+              {'share' in navigator && typeof navigator.share === 'function' && (
+                <DropdownMenuItem onClick={(e) => handleShare(e, 'native')}>
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  Share via...
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </div>

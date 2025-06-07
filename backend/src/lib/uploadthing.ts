@@ -12,7 +12,7 @@ export const uploadFileRouter = {
        * For full list of options and defaults, see the File Route API reference
        * @see https://docs.uploadthing.com/file-routes#route-config
        */
-      maxFileSize: "4MB",
+      maxFileSize: "2MB",
       maxFileCount: 4, // Allow up to 4 images per tweet
     },
   })
@@ -29,19 +29,49 @@ export const uploadFileRouter = {
       // For now, return a basic metadata object
       return { 
         userId: "authenticated-user", // This should come from your auth system
-        uploadedAt: new Date().toISOString()
+        uploadedAt: new Date().toISOString(),
+        fileType: "image"
       };
     })
     .onUploadComplete(async ({ metadata, file }) => {
       // This code RUNS ON YOUR SERVER after upload
       console.log("Upload complete for userId:", metadata.userId);
-      console.log("file url", file.url);
+      console.log("file url", file.ufsUrl);
 
       // !!! Whatever is returned here is sent to the clientside `onClientUploadComplete` callback
       return { 
-        uploadedBy: metadata.userId, 
-        url: file.url,
-        uploadedAt: metadata.uploadedAt
+        type: metadata.fileType,
+        mimeType: file.type,
+      };
+    }),
+
+  tweetDocumentUploader: f({
+    "application/pdf": { maxFileSize: "2MB", maxFileCount: 4 },
+    // "application/msword": { maxFileSize: "16MB", maxFileCount: 4 },
+    // "application/vnd.openxmlformats-officedocument.wordprocessingml.document": { maxFileSize: "16MB", maxFileCount: 4 },
+    // "application/vnd.ms-excel": { maxFileSize: "16MB", maxFileCount: 4 },
+    // "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": { maxFileSize: "16MB", maxFileCount: 4 },
+    // "application/vnd.ms-powerpoint": { maxFileSize: "16MB", maxFileCount: 4 },
+    // "application/vnd.openxmlformats-officedocument.presentationml.presentation": { maxFileSize: "16MB", maxFileCount: 4 },
+    // "text/plain": { maxFileSize: "16MB", maxFileCount: 4 },
+    // "text/csv": { maxFileSize: "16MB", maxFileCount: 4 },
+  })
+    .middleware(async ({ req }) => {
+      const authHeader = req.headers.get('authorization');
+      
+      return { 
+        userId: "authenticated-user",
+        uploadedAt: new Date().toISOString(),
+        fileType: "document"
+      };
+    })
+    .onUploadComplete(async ({ metadata, file }) => {
+      console.log("Document upload complete for userId:", metadata.userId);
+      console.log("file url", file.ufsUrl);
+
+      return { 
+        type: metadata.fileType,
+        mimeType: file.type,
       };
     }),
 } satisfies FileRouter;

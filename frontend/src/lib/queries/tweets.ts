@@ -1,10 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/utils';
-import type { Tweet } from '@/types/types';
+import type { Tweet, MediaItem } from '@/types/types';
 
 export interface CreateTweetData {
   content: string;
-  mediaUrls: string[];
+  mediaItems: MediaItem[];
   parentTweetId?: string;
 }
 
@@ -147,8 +147,8 @@ export function useTimeline() {
       return data.tweets;
     },
     refetchOnWindowFocus: false,
-    refetchInterval: 30000, // 30 seconds
-    staleTime: 10000, // 10 seconds
+    refetchInterval: 300000, // 5 minutes
+    staleTime: 60000, // 1 minute
   });
 }
 
@@ -170,7 +170,7 @@ export function useTweet(id: string) {
     },
     enabled: !!id,
     refetchOnWindowFocus: false,
-    refetchInterval: 30000, // 30 seconds
+    refetchInterval: 300000, // 5 minutes
     staleTime: 10000, // 10 seconds
   });
 }

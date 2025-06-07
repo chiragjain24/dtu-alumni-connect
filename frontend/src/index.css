@@ -121,6 +121,16 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground break-all;
+    @apply bg-background text-foreground;
+  }
+  
+  body{
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+
+  html body[data-scroll-locked] {
+    overflow: visible !important;
+    margin-right: 0 !important;
   }
 }
