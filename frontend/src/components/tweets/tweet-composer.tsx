@@ -3,6 +3,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Textarea } from '@/components/ui/textarea'
 import { Image, Smile, Calendar, MapPin } from 'lucide-react'
 import { useState } from 'react'
+import { MediaUpload } from './media-upload'
 
 interface TweetComposerProps {
   user: {
@@ -11,7 +12,7 @@ interface TweetComposerProps {
     image: string
   }
   placeholder?: string
-  onTweet?: (content: string) => void
+  onTweet?: (content: string, mediaUrls: string[]) => void
   disabled?: boolean
   parentTweetId?: string
 }
@@ -24,17 +25,21 @@ export function TweetComposer({
   parentTweetId
 }: TweetComposerProps) {
   const [content, setContent] = useState('');
+  const [mediaUrls, setMediaUrls] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showMediaUpload, setShowMediaUpload] = useState(false);
 
   const handleSubmit = async () => {
     if (!content.trim() || isSubmitting) return;
     
     setIsSubmitting(true);
     try {
-      await onTweet?.(content);
+      await onTweet?.(content, mediaUrls);
       setContent('');
+      setMediaUrls([]);
       setIsExpanded(false);
+      setShowMediaUpload(false);
     } finally {
       setIsSubmitting(false);
     }
@@ -74,10 +79,27 @@ export function TweetComposer({
             )}
           </div>
           
+          {/* Media Upload Section */}
+          {showMediaUpload && (
+            <div className="mt-3">
+              <MediaUpload
+                onMediaChange={setMediaUrls}
+                disabled={isSubmitting}
+                maxFiles={4}
+              />
+            </div>
+          )}
+          
           {isExpanded && (
             <div className="flex justify-between items-center mt-3">
               <div className="flex space-x-4 text-primary">
-                <Button variant="ghost" size="sm" className="rounded-full p-2" disabled>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="rounded-full p-2"
+                  onClick={() => setShowMediaUpload(!showMediaUpload)}
+                  disabled={isSubmitting}
+                >
                   <Image className="w-5 h-5" />
                 </Button>
                 <Button variant="ghost" size="sm" className="rounded-full p-2" disabled>

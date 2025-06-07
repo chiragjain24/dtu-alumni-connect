@@ -4,6 +4,7 @@ import type { Tweet } from '@/types/types';
 
 export interface CreateTweetData {
   content: string;
+  mediaUrls: string[];
   parentTweetId?: string;
 }
 

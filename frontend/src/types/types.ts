@@ -4,6 +4,7 @@ export interface Tweet {
     parentTweetId?: string | null;
     isRetweet: boolean;
     originalTweetId?: string | null;
+    mediaUrls: string[] | null;
     likesCount: number;
     retweetsCount: number;
     repliesCount: number;

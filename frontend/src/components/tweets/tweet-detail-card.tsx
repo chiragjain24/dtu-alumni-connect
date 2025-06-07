@@ -11,6 +11,7 @@ import type { Tweet } from '@/types/types'
 import { useLikeTweet, useRetweetTweet, useDeleteTweet } from '@/lib/queries/tweets'
 import { useSession } from '@/lib/auth-client'
 import { useNavigate } from 'react-router-dom'
+import { TweetMedia } from './tweet-media'
 
 interface TweetDetailCardProps {
   tweet: Tweet
@@ -106,6 +107,7 @@ export function TweetDetailCard({
       {/* Tweet Content - Larger text for detail view */}
       <div className="mb-4">
         <p className="text-foreground text-xl leading-relaxed whitespace-pre-wrap">{tweet.content}</p>
+        <TweetMedia mediaUrls={tweet.mediaUrls || []} />
       </div>
 
       {/* Timestamp */}

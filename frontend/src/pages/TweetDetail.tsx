@@ -18,11 +18,12 @@ export default function TweetDetail() {
   const createTweetMutation = useCreateTweet()
   const replyComposerRef = useRef<HTMLDivElement>(null)
 
-  const handleCreateReply = async (content: string) => {
+  const handleCreateReply = async (content: string, mediaUrls: string[]) => {
     if (!id) return
     await createTweetMutation.mutateAsync({ 
       content, 
-      parentTweetId: id 
+      mediaUrls,
+      parentTweetId: id
     })
   }
 

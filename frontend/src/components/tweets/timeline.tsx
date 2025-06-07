@@ -9,8 +9,8 @@ export function Timeline() {
   const { data: tweets, isLoading, error } = useTimeline();
   const createTweetMutation = useCreateTweet();
 
-  const handleCreateTweet = async (content: string) => {
-    await createTweetMutation.mutateAsync({ content });
+  const handleCreateTweet = async (content: string, mediaUrls: string[]) => {
+    await createTweetMutation.mutateAsync({ content, mediaUrls });
   };
 
   if (isLoading) {

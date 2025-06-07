@@ -12,6 +12,7 @@ import type { Tweet } from '@/types/types'
 import { useLikeTweet, useRetweetTweet, useDeleteTweet } from '@/lib/queries/tweets'
 import { useSession } from '@/lib/auth-client'
 import { toast } from 'sonner'
+import { TweetMedia } from './tweet-media'
 
 interface TweetCardProps {
   tweet: Tweet
@@ -147,6 +148,7 @@ export function TweetCard({
           
           <div className="mt-1">
             <p className="text-foreground whitespace-pre-wrap">{tweet.content}</p>
+            <TweetMedia mediaUrls={tweet.mediaUrls || []} />
           </div>
 
           <div className="flex items-center justify-between max-w-md mt-3">
