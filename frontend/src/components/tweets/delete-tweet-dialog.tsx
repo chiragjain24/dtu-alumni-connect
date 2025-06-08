@@ -29,7 +29,6 @@ export function DeleteTweetDialog({ tweet, onDeleteSuccess }: DeleteTweetDialogP
       await deleteMutation.mutateAsync(tweet)
       setIsOpen(false)
       onDeleteSuccess?.()
-      toast.success('Tweet deleted successfully')
 
     } catch (error) {
       toast.error('Failed to delete tweet')

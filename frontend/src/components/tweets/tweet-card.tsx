@@ -72,7 +72,6 @@ export function TweetCard({
           break
       }
     } catch (error) {
-      toast.error('Failed to share tweet')
       console.error('Share error:', error)
     }
   }

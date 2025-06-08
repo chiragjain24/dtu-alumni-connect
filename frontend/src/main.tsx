@@ -15,7 +15,7 @@ createRoot(document.getElementById('root')!).render(
         <UploadProvider>
           <RoutesHandler />
           <Toaster position="top-right" />
-          <ReactQueryDevtools initialIsOpen={false} />
+          {/* <ReactQueryDevtools initialIsOpen={false} /> */}
         </UploadProvider>
       </ThemeProvider>
     </TanstackQueryProvider>

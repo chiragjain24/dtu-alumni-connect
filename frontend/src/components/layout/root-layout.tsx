@@ -9,7 +9,7 @@ type Props = {
 const RootLayout = ({children}: Props) => {
   return (
     <div className='min-h-screen bg-background'>
-      <div className='flex gap-4 mx-auto max-w-7xl'>
+      <div className='flex lg:gap-4 mx-auto max-w-7xl'>
         <LeftSidebar />
         <MainContainer>
           {children}
