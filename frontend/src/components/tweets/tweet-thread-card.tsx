@@ -6,13 +6,14 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu'
-import { MoreHorizontal, Heart, MessageCircle, Repeat2, Share, Trash2 } from 'lucide-react'
+import { MoreHorizontal, Heart, MessageCircle, Repeat2, Share2, Copy, ExternalLink } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import type { Tweet } from '@/types/types'
-import { useLikeTweet, useRetweetTweet, useDeleteTweet } from '@/lib/queries/tweets'
+import { useLikeTweet, useRetweetTweet } from '@/lib/queries/tweets'
 import { useSession } from '@/lib/auth-client'
 import { toast } from 'sonner'
 import { TweetMedia } from './tweet-media'
+import { DeleteTweetDialog } from './delete-tweet-dialog'
 
 interface TweetThreadCardProps {
   tweet: Tweet
@@ -27,7 +28,6 @@ export function TweetThreadCard({
   const { data: session } = useSession()
   const likeMutation = useLikeTweet()
   const retweetMutation = useRetweetTweet()
-  const deleteMutation = useDeleteTweet()
   
   // Check if current user is the author of this tweet
   const isAuthor = session?.user.id === tweet.authorId
@@ -47,23 +47,37 @@ export function TweetThreadCard({
     navigate(`/tweet/${tweet.id}`)
   }
 
-  const handleDelete = async (e: React.MouseEvent) => {
-    e.stopPropagation()
-    if (window.confirm('Are you sure you want to delete this tweet?')) {
-      await deleteMutation.mutateAsync(tweet)
-    }
-  }
 
-  const handleShare = async (e: React.MouseEvent) => {
+
+  const handleShare = async (e: React.MouseEvent, shareType: 'copy' | 'native') => {
     e.stopPropagation()
     
     const tweetUrl = `${window.location.origin}/tweet/${tweet.id}`
+    const shareText = `Check out this tweet: "${tweet.content.slice(0, 100)}${tweet.content.length > 100 ? '...' : ''}"`
     
     try {
-      await navigator.clipboard.writeText(tweetUrl)
-      toast.success('Tweet link copied to clipboard!')
+      switch (shareType) {
+        case 'copy':
+          await navigator.clipboard.writeText(tweetUrl)
+          toast.success('Tweet link copied to clipboard!')
+          break
+            
+        case 'native':
+          if ('share' in navigator && typeof navigator.share === 'function') {
+            await navigator.share({
+              title: 'DTU Alumni Connect',
+              text: shareText,
+              url: tweetUrl,
+            })
+          } else {
+            // Fallback to copy
+            await navigator.clipboard.writeText(tweetUrl)
+            toast.success('Tweet link copied to clipboard!')
+          }
+          break
+      }
     } catch (error) {
-      toast.error('Failed to copy tweet link')
+      toast.error('Failed to share tweet')
       console.error('Share error:', error)
     }
   }
@@ -124,14 +138,7 @@ export function TweetThreadCard({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   {isAuthor && (
-                    <DropdownMenuItem 
-                      onClick={handleDelete}
-                      className="text-red-600 focus:text-red-600"
-                      disabled={deleteMutation.isPending}
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      {deleteMutation.isPending ? 'Deleting...' : 'Delete tweet'}
-                    </DropdownMenuItem>
+                    <DeleteTweetDialog tweet={tweet} />
                   )}
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -184,14 +191,30 @@ export function TweetThreadCard({
               <span className="text-sm">{tweet.likesCount}</span>
             </Button>
             
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="flex items-center space-x-2 text-muted-foreground hover:text-primary rounded-full"
-              onClick={handleShare}
-            >
-              <Share className="w-4 h-4" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="flex items-center space-x-2 text-muted-foreground hover:text-primary rounded-full"
+                >
+                  <Share2 className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={(e) => handleShare(e, 'copy')}>
+                  <Copy className="w-4 h-4 mr-2" />
+                  Copy link
+                </DropdownMenuItem>
+                {'share' in navigator && typeof navigator.share === 'function' && (
+                  <DropdownMenuItem onClick={(e) => handleShare(e, 'native')}>
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    Share via...
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
           </div>
         </div>
       </div>

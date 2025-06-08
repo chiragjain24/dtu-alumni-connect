@@ -6,13 +6,14 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu'
-import { MoreHorizontal, Heart, MessageCircle, Repeat2, Share2, Trash2, Copy, ExternalLink } from 'lucide-react'
+import { MoreHorizontal, Heart, MessageCircle, Repeat2, Share2, Copy, ExternalLink } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import type { Tweet } from '@/types/types'
-import { useLikeTweet, useRetweetTweet, useDeleteTweet } from '@/lib/queries/tweets'
+import { useLikeTweet, useRetweetTweet } from '@/lib/queries/tweets'
 import { useSession } from '@/lib/auth-client'
 import { toast } from 'sonner'
 import { TweetMedia } from './tweet-media'
+import { DeleteTweetDialog } from './delete-tweet-dialog'
 
 interface TweetCardProps {
   tweet: Tweet
@@ -25,7 +26,6 @@ export function TweetCard({
   const { data: session } = useSession()
   const likeMutation = useLikeTweet()
   const retweetMutation = useRetweetTweet()
-  const deleteMutation = useDeleteTweet()
   
   // Check if current user is the author of this tweet
   const isAuthor = session?.user.id === tweet.authorId
@@ -42,12 +42,7 @@ export function TweetCard({
     navigate(`/tweet/${tweet.id}`)
   }
 
-  const handleDelete = async (e: React.MouseEvent) => {
-    e.stopPropagation()
-    if (window.confirm('Are you sure you want to delete this tweet?')) {
-      await deleteMutation.mutateAsync(tweet)
-    }
-  }
+
 
   const handleShare = async (e: React.MouseEvent, shareType: 'copy' | 'native') => {
     e.stopPropagation()
@@ -132,14 +127,7 @@ export function TweetCard({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   {isAuthor && (
-                    <DropdownMenuItem 
-                      onClick={handleDelete}
-                      className="text-red-600 focus:text-red-600"
-                      disabled={deleteMutation.isPending}
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      {deleteMutation.isPending ? 'Deleting...' : 'Delete tweet'}
-                    </DropdownMenuItem>
+                    <DeleteTweetDialog tweet={tweet} />
                   )}
                 </DropdownMenuContent>
               </DropdownMenu>

@@ -4,7 +4,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Image, Smile, Calendar, MapPin } from 'lucide-react'
 import { useState } from 'react'
 import { MediaUpload } from './media-upload'
-import { useUploadThing } from '@/lib/uploadthing'
+import { useCachedUploadThing } from '@/lib/providers/upload-provider'
 import type { MediaItem } from '@/types/types'
 import { toast } from 'sonner'
 
@@ -33,8 +33,7 @@ export function TweetComposer({
   const [isExpanded, setIsExpanded] = useState(false);
   const [showMediaUpload, setShowMediaUpload] = useState(false);
 
-  const { startUpload: startImageUpload } = useUploadThing("tweetImageUploader");
-  const { startUpload: startDocumentUpload } = useUploadThing("tweetDocumentUploader");
+  const { startImageUpload, startDocumentUpload } = useCachedUploadThing();
 
   const handleSubmit = async () => {
     if (!content.trim() || isSubmitting) return;

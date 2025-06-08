@@ -14,6 +14,7 @@ const app = new Hono()
   .get('/', async (c) => {
     const request = c.req.raw;
     const response = await handlers(request);
+    response.headers.set('Cache-Control', 'max-age=600'); // 10 minutes
     return response;
   })
   .post('/', async (c) => {

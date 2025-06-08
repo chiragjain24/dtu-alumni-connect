@@ -6,13 +6,14 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu'
-import { MoreHorizontal, Heart, MessageCircle, Repeat2, Share, Trash2, Copy, ExternalLink } from 'lucide-react'
+import { MoreHorizontal, Heart, MessageCircle, Repeat2, Share2, Copy, ExternalLink } from 'lucide-react'
 import type { Tweet } from '@/types/types'
-import { useLikeTweet, useRetweetTweet, useDeleteTweet } from '@/lib/queries/tweets'
+import { useLikeTweet, useRetweetTweet } from '@/lib/queries/tweets'
 import { useSession } from '@/lib/auth-client'
 import { useNavigate } from 'react-router-dom'
 import { TweetMedia } from './tweet-media'
 import { toast } from 'sonner'
+import { DeleteTweetDialog } from './delete-tweet-dialog'
 
 interface TweetDetailCardProps {
   tweet: Tweet
@@ -27,7 +28,6 @@ export function TweetDetailCard({
   const { data: session } = useSession()
   const likeMutation = useLikeTweet()
   const retweetMutation = useRetweetTweet()
-  const deleteMutation = useDeleteTweet()
   
   // Check if current user is the author of this tweet
   const isAuthor = session?.user.id === tweet.authorId
@@ -44,12 +44,9 @@ export function TweetDetailCard({
     onReply?.()
   };
 
-  const handleDelete = async () => {
-    if (window.confirm('Are you sure you want to delete this tweet?')) {
-      await deleteMutation.mutateAsync(tweet)
-      // Navigate back to home after deleting the tweet
-      navigate('/')
-    }
+  const handleDeleteSuccess = () => {
+    // Navigate back to home after deleting the tweet
+    navigate('/')
   }
 
   const handleShare = async (e: React.MouseEvent, shareType: 'copy' | 'native') => {
@@ -122,14 +119,7 @@ export function TweetDetailCard({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   {isAuthor && (
-                    <DropdownMenuItem 
-                      onClick={handleDelete}
-                      className="text-red-600 focus:text-red-600"
-                      disabled={deleteMutation.isPending}
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      {deleteMutation.isPending ? 'Deleting...' : 'Delete tweet'}
-                    </DropdownMenuItem>
+                    <DeleteTweetDialog tweet={tweet} onDeleteSuccess={handleDeleteSuccess} />
                   )}
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -206,7 +196,7 @@ export function TweetDetailCard({
                 size="sm" 
                 className="flex items-center space-x-2 text-muted-foreground hover:text-primary rounded-full p-3"
               >
-                <Share className="w-5 h-5" />
+                <Share2 className="w-5 h-5" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">

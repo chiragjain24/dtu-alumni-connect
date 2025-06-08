@@ -4,6 +4,34 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@layer base {
+  html {
+    font-size: 15px;
+    /* Always show vertical scrollbar to prevent layout shift */
+    overflow-y: scroll;
+  }
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  
+  body{
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+
+  html body[data-scroll-locked] {
+    overflow: visible !important;
+    margin-right: 0 !important;
+  }
+}
+
+
+
+/* Shadcn theme */
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -111,26 +139,3 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
-@layer base {
-  html {
-    font-size: 15px;
-    /* Always show vertical scrollbar to prevent layout shift */
-    overflow-y: scroll;
-  }
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-  
-  body{
-    word-break: break-word;
-    overflow-wrap: break-word;
-  }
-
-  html body[data-scroll-locked] {
-    overflow: visible !important;
-    margin-right: 0 !important;
-  }
-}
