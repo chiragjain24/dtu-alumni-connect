@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { api } from '../lib/utils'
 import useGetMyProfile from '@/lib/queries'
 import Loader from '@/components/loader'
+import { ModeToggle } from '@/components/others/mode-toggle'
 
 const DTU_BRANCHES = [
   'Computer Science and Engineering',
@@ -299,18 +300,13 @@ export default function Settings() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <p className="text-muted-foreground">
-            Theme and appearance settings will be available in a future update.
-          </p>
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3 border rounded-lg">
               <div>
-                <h4 className="font-medium">Dark Mode</h4>
-                <p className="text-sm text-muted-foreground">Switch between light and dark themes</p>
+                <h4 className="font-medium">Theme</h4>
+                <p className="text-sm text-muted-foreground">Switch between light, dark, and system themes</p>
               </div>
-              <Button variant="outline" size="sm" disabled>
-                Coming Soon
-              </Button>
+              <ModeToggle />
             </div>
             <div className="flex items-center justify-between p-3 border rounded-lg">
               <div>

@@ -99,12 +99,6 @@ export default function Explore() {
           />
         ))}
 
-        {/* Phase 2 Note */}
-        <div className="p-6 text-center bg-muted border-b border-border">
-          <p className="text-sm text-muted-foreground">
-            Explore page - Part of Phase 2 Twitter-like UI implementation
-          </p>
-        </div>
       </div>
     </div>
   )

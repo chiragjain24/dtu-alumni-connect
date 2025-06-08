@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Textarea } from '@/components/ui/textarea'
-import { Image, Smile, Calendar, MapPin } from 'lucide-react'
+import { Image, Smile, Calendar } from 'lucide-react'
 import { useState } from 'react'
 import { MediaUpload } from './media-upload'
 import { useCachedUploadThing } from '@/lib/providers/upload-provider'
@@ -18,6 +18,7 @@ interface TweetComposerProps {
   onTweet?: (content: string, mediaItems: MediaItem[]) => Promise<void>
   disabled?: boolean
   parentTweetId?: string
+  variant?: 'default' | 'modal'
 }
 
 export function TweetComposer({ 
@@ -25,12 +26,13 @@ export function TweetComposer({
   placeholder = "What's happening?", 
   onTweet,
   disabled = false,
-  parentTweetId
+  parentTweetId,
+  variant = 'default'
 }: TweetComposerProps) {
   const [content, setContent] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(variant === 'modal' ? true : false);
   const [showMediaUpload, setShowMediaUpload] = useState(false);
 
   const { startImageUpload, startDocumentUpload } = useCachedUploadThing();
@@ -95,7 +97,7 @@ export function TweetComposer({
   const isDisabled = disabled || !content.trim() || isSubmitting;
 
   return (
-    <div className="border-b border-border p-4">
+    <div className={`p-4 ${variant === 'default' ? 'border-b border-border' : ''}`}>
       <div className="flex space-x-3">
         <Avatar className="w-10 h-10">
           <AvatarImage src={user.image || undefined} alt={`${user.name} avatar`} />
@@ -154,9 +156,6 @@ export function TweetComposer({
                 </Button>
                 <Button variant="ghost" size="sm" className="rounded-full p-2" disabled>
                   <Calendar className="w-5 h-5" />
-                </Button>
-                <Button variant="ghost" size="sm" className="rounded-full p-2" disabled>
-                  <MapPin className="w-5 h-5" />
                 </Button>
               </div>
               

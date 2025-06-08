@@ -130,18 +130,6 @@ export default function Jobs() {
           />
         ))}
 
-        {/* Phase 2 Note */}
-        <div className="p-6 text-center bg-muted border-b border-border">
-          <h3 className="text-lg font-bold text-primary mb-2">
-            Jobs Board - Phase 2 UI Complete! 🎉
-          </h3>
-          <p className="text-muted-foreground mb-2">
-            Job posting and referral system UI is ready
-          </p>
-          <p className="text-sm text-muted-foreground">
-            Backend integration and posting functionality coming in Phase 3
-          </p>
-        </div>
       </div>
     </div>
   )

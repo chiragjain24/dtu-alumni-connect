@@ -19,7 +19,6 @@ const PlaceholderPage = ({ title }: { title: string }) => (
     <div className="p-6 text-center">
       <h2 className="text-2xl font-bold text-foreground mb-4">{title}</h2>
       <p className="text-muted-foreground mb-4">This page will be implemented in future phases.</p>
-      <p className="text-sm text-muted-foreground">Currently in Phase 2: Twitter-like UI & Layout</p>
     </div>
   </div>
 )

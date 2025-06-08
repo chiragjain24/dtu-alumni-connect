@@ -3,9 +3,8 @@
 
 const RightSidebar = () => {
   return (
-    <div className='xl:w-[380px] max-xl:hidden'>
-      
-    </div>
+    <div className='xl:w-[300px] max-xl:hidden'>
+     </div>
   )
 }
 

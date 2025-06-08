@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { 
   Home, 
@@ -22,9 +23,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { TweetComposerModal } from '@/components/tweets/tweet-composer-modal'
 
 const LeftSidebar = () => {
   const location = useLocation()
+  const [isTweetModalOpen, setIsTweetModalOpen] = useState(false)
 
   const handleSignOut = async () => {
     try {
@@ -32,6 +35,10 @@ const LeftSidebar = () => {
     } catch (error) {
       console.error('Sign out failed:', error)
     }
+  }
+
+  const handleCreateTweetClick = () => {
+    setIsTweetModalOpen(true)
   }
 
   const navigationItems = [
@@ -88,7 +95,10 @@ const LeftSidebar = () => {
 
           {/* Tweet Button */}
           <div className='mt-6 px-3'>
-            <Button className='w-full lg:w-auto lg:px-8 h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-full flex items-center justify-center'>
+            <Button 
+              onClick={handleCreateTweetClick}
+              className='w-full lg:w-auto lg:px-8 h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-full flex items-center justify-center'
+            >
               <span className='hidden lg:block'>Tweet</span>
               <Plus className='lg:hidden w-6 h-6' />
             </Button>
@@ -162,7 +172,7 @@ const LeftSidebar = () => {
                 )
               })}
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
+              <DropdownMenuItem onClick={handleSignOut}>
                 <LogOut className='w-5 h-5 mr-3' />
                 Sign Out
               </DropdownMenuItem>
@@ -171,23 +181,21 @@ const LeftSidebar = () => {
         </div>
 
         {/* Mobile Tweet Button */}
-        <div className='absolute -top-8 right-4'>
-          <Button className='w-14 h-14 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full shadow-lg flex items-center justify-center'>
+        <div className='absolute -top-16 right-4'>
+          <Button 
+            onClick={handleCreateTweetClick}
+            className='w-14 h-14 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full shadow-lg flex items-center justify-center'
+          >
             <Plus className='w-6 h-6' />
           </Button>
         </div>
       </div>
 
-      {/* Mobile Theme Toggle (Top Header) */}
-      <div className='sm:hidden fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-md border-b border-border z-40 px-4 py-3 flex items-center justify-between'>
-        <Link to="/" className='flex items-center space-x-2'>
-          <div className='w-8 h-8 bg-primary rounded-full flex items-center justify-center'>
-            <span className='text-primary-foreground font-bold text-sm'>DTU</span>
-          </div>
-          <span className='text-lg font-bold text-foreground'>Alumni Connect</span>
-        </Link>
-        <ModeToggle />
-      </div>
+      {/* Tweet Composer Modal */}
+      <TweetComposerModal 
+        open={isTweetModalOpen} 
+        setOpen={setIsTweetModalOpen} 
+      />
     </>
   )
 }
