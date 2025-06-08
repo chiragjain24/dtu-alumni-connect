@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { FileText, Download, ExternalLink, File, FileSpreadsheet, FileImage } from 'lucide-react';
+import { FileText, Download, File, FileSpreadsheet, FileImage } from 'lucide-react';
 import { toast } from 'sonner';
 import type { MediaItem } from '@/types/types';
 
@@ -100,15 +100,6 @@ export function DocumentCard({ document }: DocumentCardProps) {
           title="Download document"
         >
           <Download className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleOpenInNewTab}
-          className="h-8 w-8 p-0"
-          title="Open in new tab"
-        >
-          <ExternalLink className="h-4 w-4" />
         </Button>
       </div>
     </div>

@@ -1,5 +1,7 @@
+import { HTTPException } from "hono/http-exception";
 import { createUploadthing, type FileRouter } from "uploadthing/server";
-import { UploadThingError } from "uploadthing/server";
+import { auth } from "./auth";
+// import { UploadThingError } from "uploadthing/server";
 
 const f = createUploadthing();
 
@@ -18,30 +20,27 @@ export const uploadFileRouter = {
   })
     // Set permissions and file types for this FileRoute
     .middleware(async ({ req }) => {
-      // This code runs on your server before upload
-      // For now, we'll allow all uploads - you can add auth logic here later
-      // In a real app, you'd extract the user from the request headers
+      // Authenticate user using BetterAuth
+      const session = await auth.api.getSession({ headers: req.headers });
       
-      // Extract user info from headers if available
-      const authHeader = req.headers.get('authorization');
-      // You can implement proper auth validation here
-      
-      // For now, return a basic metadata object
+      if (!session || !session.user) {
+        throw new HTTPException(401, { message: 'Unauthorized - Please log in to upload files' });
+      }
+
+      // Return metadata with actual user info
       return { 
-        userId: "authenticated-user", // This should come from your auth system
+        userId: session.user.id,
         uploadedAt: new Date().toISOString(),
         fileType: "image"
       };
     })
     .onUploadComplete(async ({ metadata, file }) => {
-      // This code RUNS ON YOUR SERVER after upload
-      console.log("Upload complete for userId:", metadata.userId);
-      console.log("file url", file.ufsUrl);
 
       // !!! Whatever is returned here is sent to the clientside `onClientUploadComplete` callback
       return { 
         type: metadata.fileType,
         mimeType: file.type,
+        userId: metadata.userId,
       };
     }),
 
@@ -57,21 +56,25 @@ export const uploadFileRouter = {
     // "text/csv": { maxFileSize: "16MB", maxFileCount: 4 },
   })
     .middleware(async ({ req }) => {
-      const authHeader = req.headers.get('authorization');
+      // Authenticate user using BetterAuth
+      const session = await auth.api.getSession({ headers: req.headers });
+      
+      if (!session || !session.user) {
+        throw new HTTPException(401, { message: 'Unauthorized - Please log in to upload documents' });
+      }
       
       return { 
-        userId: "authenticated-user",
+        userId: session.user.id,
         uploadedAt: new Date().toISOString(),
         fileType: "document"
       };
     })
     .onUploadComplete(async ({ metadata, file }) => {
-      console.log("Document upload complete for userId:", metadata.userId);
-      console.log("file url", file.ufsUrl);
 
       return { 
         type: metadata.fileType,
         mimeType: file.type,
+        userId: metadata.userId,
       };
     }),
 } satisfies FileRouter;

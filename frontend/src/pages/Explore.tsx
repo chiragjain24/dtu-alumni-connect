@@ -26,7 +26,8 @@ export default function Explore() {
       updatedAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
       authorName: 'DTU Placement Cell',
       authorUsername: 'dtu_placements',
-      authorImage: 'https://via.placeholder.com/150'
+      authorImage: 'https://via.placeholder.com/150',
+      mediaItems: [],
     },
     {
       id: '2', 
@@ -40,7 +41,8 @@ export default function Explore() {
       updatedAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
       authorName: 'Tech Alumni Network',
       authorUsername: 'tech_alumni_dtu',
-      authorImage: 'https://via.placeholder.com/150'
+      authorImage: 'https://via.placeholder.com/150',
+      mediaItems: [],
     }
   ]
 

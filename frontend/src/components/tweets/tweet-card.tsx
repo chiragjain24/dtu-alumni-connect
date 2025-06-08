@@ -6,7 +6,7 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu'
-import { MoreHorizontal, Heart, MessageCircle, Repeat2, Share, Trash2, Copy, ExternalLink } from 'lucide-react'
+import { MoreHorizontal, Heart, MessageCircle, Repeat2, Share2, Trash2, Copy, ExternalLink } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import type { Tweet } from '@/types/types'
 import { useLikeTweet, useRetweetTweet, useDeleteTweet } from '@/lib/queries/tweets'
@@ -199,7 +199,7 @@ export function TweetCard({
                   size="sm" 
                   className="flex items-center space-x-2 text-muted-foreground hover:text-primary rounded-full"
                 >
-                  <Share className="w-4 h-4" />
+                  <Share2 className="w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
