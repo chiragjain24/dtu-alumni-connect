@@ -7,7 +7,7 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu'
 import { MoreHorizontal, Heart, MessageCircle, Repeat2, Share2, Copy, ExternalLink, Flag } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import type { Tweet } from '@/types/types'
 import { useLikeTweet, useRetweetTweet } from '@/lib/queries/tweets'
 import { useSession } from '@/lib/auth-client'
@@ -32,26 +32,19 @@ export function TweetThreadCard({
   // Check if current user is the author of this tweet
   const isAuthor = session?.user.id === tweet.authorId
 
-  const handleLike = async (e: React.MouseEvent) => {
-    e.stopPropagation()
+  const handleLike = async () => {
     await likeMutation.mutateAsync({tweet, isLike: !tweet.isLikedByUser})
   }
 
-  const handleRetweet = async (e: React.MouseEvent) => {
-    e.stopPropagation()
+  const handleRetweet = async () => {
     await retweetMutation.mutateAsync(tweet)
   }
 
-  const handleReply = (e: React.MouseEvent) => {
-    e.stopPropagation()
+  const handleReply = () => {
     navigate(`/tweet/${tweet.id}`)
   }
 
-
-
-  const handleShare = async (e: React.MouseEvent, shareType: 'copy' | 'native') => {
-    e.stopPropagation()
-    
+  const handleShare = async (shareType: 'copy' | 'native') => {
     const tweetUrl = `${window.location.origin}/tweet/${tweet.id}`
     const shareText = `Check out this tweet: "${tweet.content.slice(0, 100)}${tweet.content.length > 100 ? '...' : ''}"`
     
@@ -93,19 +86,45 @@ export function TweetThreadCard({
     return `${Math.floor(diffInSeconds / 86400)}d`;
   };
 
-  const handleTweetClick = (e: React.MouseEvent) => {
-    // Don't navigate if clicking on interactive elements
-    if ((e.target as HTMLElement).closest('button')) {
-      return;
-    }
+  // Centralized click handler that determines action based on data attributes
+  const handleContainerClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement
+    const clickableElement = target.closest('[data-action]') as HTMLElement
     
-    navigate(`/tweet/${tweet.id}`);
-  };
+    if (!clickableElement) {
+      // No specific action found, navigate to tweet detail
+      navigate(`/tweet/${tweet.id}`)
+      return
+    }
+
+    const action = clickableElement.getAttribute('data-action')
+    
+    switch (action) {
+      case 'like':
+        handleLike()
+        break
+      case 'retweet':
+        handleRetweet()
+        break
+      case 'reply':
+        handleReply()
+        break
+      case 'share-copy':
+        handleShare('copy')
+        break
+      case 'share-native':
+        handleShare('native')
+        break
+      case 'prevent':
+        // Do nothing - prevents default tweet navigation
+        break
+    }
+  }
 
   return (
     <div 
-      className="px-4 pb-1 pt-3 hover:bg-accent/50 transition-colors cursor-pointer relative"
-      onClick={handleTweetClick}
+      className="px-4 pb-1 pt-3 hover:bg-accent/50 transition-colors relative"
+      onClick={handleContainerClick}
     >
       {/* Thread line */}
       <div className="absolute left-9 top-0 w-0.5 bg-border h-full"></div>
@@ -114,29 +133,40 @@ export function TweetThreadCard({
       )}
       
       <div className="flex space-x-3 relative">
-        <Avatar className="w-10 h-10 relative z-10 bg-background border-2 border-background">
-          <AvatarImage src={tweet.authorImage || undefined} alt={`${tweet.authorName} avatar`} />
-          <AvatarFallback>
-            {tweet.authorName?.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
+        <Link to={`/profile/${tweet.authorUsername}`} data-action="prevent">
+          <Avatar className="w-10 h-10 relative z-10 bg-background border-2 border-background hover:opacity-80 transition-opacity">
+            <AvatarImage src={tweet.authorImage || undefined} alt={`${tweet.authorName} avatar`} />
+            <AvatarFallback>
+              {tweet.authorName?.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+        </Link>
         
         <div className="flex-1">
           <div className="flex items-center space-x-2">
-            <h3 className="font-bold text-foreground hover:underline">{tweet.authorName}</h3>
-            {tweet.authorUsername && (
-              <span className="text-muted-foreground">@{tweet.authorUsername}</span>
-            )}
+            <Link to={`/profile/${tweet.authorUsername}`} data-action="prevent">
+              <h3 className="font-bold text-foreground hover:underline">{tweet.authorName}</h3>
+            </Link>
+            <Link to={`/profile/${tweet.authorUsername}`} data-action="prevent">
+              {tweet.authorUsername && (
+                <span className="text-muted-foreground">@{tweet.authorUsername}</span>
+              )}
+            </Link>
             <span className="text-muted-foreground">·</span>
             <span className="text-muted-foreground">{formatTimeAgo(tweet.createdAt)}</span>
             <div className="ml-auto">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="rounded-full">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="rounded-full"
+                    data-action="prevent"
+                  >
                     <MoreHorizontal className="w-4 h-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                <DropdownMenuContent align="end" data-action="prevent">
                   {isAuthor && (
                     <DeleteTweetDialog tweet={tweet} />
                   )}
@@ -159,7 +189,7 @@ export function TweetThreadCard({
               variant="ghost" 
               size="sm" 
               className="flex items-center space-x-2 text-muted-foreground hover:text-primary rounded-full"
-              onClick={handleReply}
+              data-action="reply"
             >
               <MessageCircle className="w-4 h-4" />
               <span className="text-sm">{tweet.repliesCount}</span>
@@ -173,7 +203,7 @@ export function TweetThreadCard({
                   ? 'text-green-600' 
                   : 'text-muted-foreground hover:text-green-600'
               }`}
-              onClick={handleRetweet}
+              data-action="retweet"
               disabled={retweetMutation.isPending}
             >
               <Repeat2 className="w-4 h-4" />
@@ -188,7 +218,7 @@ export function TweetThreadCard({
                   ? 'text-red-500' 
                   : 'text-muted-foreground hover:text-red-500'
               }`}
-              onClick={handleLike}
+              data-action="like"
               disabled={likeMutation.isPending}
             >
               <Heart className={`w-4 h-4 ${tweet.isLikedByUser ? 'fill-current' : ''}`} />
@@ -201,17 +231,18 @@ export function TweetThreadCard({
                   variant="ghost" 
                   size="sm" 
                   className="flex items-center space-x-2 text-muted-foreground hover:text-primary rounded-full"
+                  data-action="prevent"
                 >
                   <Share2 className="w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={(e) => handleShare(e, 'copy')}>
+              <DropdownMenuContent align="end" data-action="prevent">
+                <DropdownMenuItem data-action="share-copy">
                   <Copy className="w-4 h-4 mr-2" />
                   Copy link
                 </DropdownMenuItem>
                 {'share' in navigator && typeof navigator.share === 'function' && (
-                  <DropdownMenuItem onClick={(e) => handleShare(e, 'native')}>
+                  <DropdownMenuItem data-action="share-native">
                     <ExternalLink className="w-4 h-4 mr-2" />
                     Share via...
                   </DropdownMenuItem>

@@ -52,8 +52,8 @@ export function TweetMedia({ mediaItems, className = "" }: TweetMediaProps) {
     return "aspect-square";
   };
 
-  const handleImageClick = (index: number, e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent tweet navigation when clicking images
+  // Handle image clicks through data attribute system
+  const handleImageClick = (index: number) => {
     setSelectedImageIndex(index);
     setModalOpen(true);
   };
@@ -68,12 +68,13 @@ export function TweetMedia({ mediaItems, className = "" }: TweetMediaProps) {
               <div
                 key={index}
                 className={`overflow-hidden rounded-lg border bg-muted ${getImageClass(images.length, index)}`}
+                data-action="prevent"
+                onClick={() => handleImageClick(index)}
               >
                 <img
                   src={image.url}
                   alt={image.name || `Image ${index + 1}`}
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-200 cursor-pointer"
-                  onClick={(e) => handleImageClick(index, e)}
                 />
               </div>
             ))}

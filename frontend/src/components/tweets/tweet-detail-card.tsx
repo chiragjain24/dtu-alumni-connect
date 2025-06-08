@@ -10,7 +10,7 @@ import { MoreHorizontal, Heart, MessageCircle, Repeat2, Share2, Copy, ExternalLi
 import type { Tweet } from '@/types/types'
 import { useLikeTweet, useRetweetTweet } from '@/lib/queries/tweets'
 import { useSession } from '@/lib/auth-client'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { TweetMedia } from './tweet-media'
 import { toast } from 'sonner'
 import { DeleteTweetDialog } from './delete-tweet-dialog'
@@ -49,9 +49,7 @@ export function TweetDetailCard({
     navigate('/')
   }
 
-  const handleShare = async (e: React.MouseEvent, shareType: 'copy' | 'native') => {
-    e.stopPropagation()
-    
+  const handleShare = async (shareType: 'copy' | 'native') => {
     const tweetUrl = `${window.location.origin}/tweet/${tweet.id}`
     const shareText = `Check out this tweet: "${tweet.content.slice(0, 100)}${tweet.content.length > 100 ? '...' : ''}"`
     
@@ -93,31 +91,75 @@ export function TweetDetailCard({
     });
   };
 
+  // Centralized click handler that determines action based on data attributes
+  const handleContainerClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement
+    const clickableElement = target.closest('[data-action]') as HTMLElement
+    
+    if (!clickableElement) {
+      return // No default action for detail card
+    }
+
+    const action = clickableElement.getAttribute('data-action')
+    
+    switch (action) {
+      case 'like':
+        handleLike()
+        break
+      case 'retweet':
+        handleRetweet()
+        break
+      case 'reply':
+        handleReply()
+        break
+      case 'share-copy':
+        handleShare('copy')
+        break
+      case 'share-native':
+        handleShare('native')
+        break
+      case 'prevent':
+        // Do nothing - prevents any unwanted actions
+        break
+    }
+  }
+
   return (
-    <div className="p-4 pb-0">
+    <div className="p-4 pb-0" onClick={handleContainerClick}>
       <div className="flex space-x-3 mb-3">
-        <Avatar className="w-10 h-10">
-          <AvatarImage src={tweet.authorImage || undefined} alt={`${tweet.authorName} avatar`} />
-          <AvatarFallback>
-            {tweet.authorName?.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
+        <Link to={`/profile/${tweet.authorUsername}`} data-action="prevent">
+          <Avatar className="w-10 h-10 hover:opacity-80 transition-opacity">
+            <AvatarImage src={tweet.authorImage || undefined} alt={`${tweet.authorName} avatar`} />
+            <AvatarFallback>
+              {tweet.authorName?.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+        </Link>
         
         <div className="flex-1">
           <div className="flex items-center space-x-2">
             <div className="">
-              <h3 className="font-bold text-foreground hover:underline">{tweet.authorName}</h3>
-              <span className="text-muted-foreground">@{tweet.authorUsername}</span>
+              <Link to={`/profile/${tweet.authorUsername}`} data-action="prevent">
+                <h3 className="font-bold text-foreground hover:underline">{tweet.authorName}</h3>
+              </Link>
+              <Link to={`/profile/${tweet.authorUsername}`} data-action="prevent">
+                <span className="text-muted-foreground">@{tweet.authorUsername}</span>
+              </Link>
             </div>
 
             <div className="ml-auto">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="rounded-full">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="rounded-full"
+                    data-action="prevent"
+                  >
                     <MoreHorizontal className="w-4 h-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                <DropdownMenuContent align="end" data-action="prevent">
                   {isAuthor && (
                     <DeleteTweetDialog tweet={tweet} onDeleteSuccess={handleDeleteSuccess} />
                   )}
@@ -151,7 +193,7 @@ export function TweetDetailCard({
             variant="ghost" 
             size="sm" 
             className="flex items-center space-x-2 text-muted-foreground hover:text-primary rounded-full p-3"
-            onClick={handleReply}
+            data-action="reply"
           >
             <MessageCircle className="w-5 h-5" />
             <span className="text-muted-foreground text-sm">
@@ -166,10 +208,10 @@ export function TweetDetailCard({
               tweet.isRetweetedByUser 
                 ? 'text-green-600' 
                 : 'text-muted-foreground hover:text-green-600'
-              }`}
-              onClick={handleRetweet}
-              disabled={retweetMutation.isPending}
-              >
+            }`}
+            data-action="retweet"
+            disabled={retweetMutation.isPending}
+          >
             <Repeat2 className="w-5 h-5" />
             <span className="text-muted-foreground text-sm">
               {tweet.retweetsCount}
@@ -184,9 +226,9 @@ export function TweetDetailCard({
               ? 'text-red-500' 
               : 'text-muted-foreground hover:text-red-500'
             }`}
-            onClick={handleLike}
+            data-action="like"
             disabled={likeMutation.isPending}
-            >
+          >
             <Heart className={`w-5 h-5 ${tweet.isLikedByUser ? 'fill-current' : ''}`} />
             <span className="text-muted-foreground text-sm">
               {tweet.likesCount}
@@ -199,17 +241,18 @@ export function TweetDetailCard({
                 variant="ghost" 
                 size="sm" 
                 className="flex items-center space-x-2 text-muted-foreground hover:text-primary rounded-full p-3"
+                data-action="prevent"
               >
                 <Share2 className="w-5 h-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={(e) => handleShare(e, 'copy')}>
+            <DropdownMenuContent align="end" data-action="prevent">
+              <DropdownMenuItem data-action="share-copy">
                 <Copy className="w-4 h-4 mr-2" />
                 Copy link
               </DropdownMenuItem>
               {'share' in navigator && typeof navigator.share === 'function' && (
-                <DropdownMenuItem onClick={(e) => handleShare(e, 'native')}>
+                <DropdownMenuItem data-action="share-native">
                   <ExternalLink className="w-4 h-4 mr-2" />
                   Share via...
                 </DropdownMenuItem>

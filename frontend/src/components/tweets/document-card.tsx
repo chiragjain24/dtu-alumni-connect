@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { FileText, Download, File, FileSpreadsheet, FileImage } from 'lucide-react';
 import { toast } from 'sonner';
 import type { MediaItem } from '@/types/types';
+import { Link } from 'react-router-dom';
 
 interface DocumentCardProps {
   document: MediaItem;
@@ -48,8 +49,7 @@ export function DocumentCard({ document }: DocumentCardProps) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const handleDownload = async (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleDownload = async () => {
     try {
       const response = await fetch(document.url);
       const blob = await response.blob();
@@ -68,40 +68,37 @@ export function DocumentCard({ document }: DocumentCardProps) {
     }
   };
 
-  const handleOpenInNewTab = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    window.open(document.url, '_blank');
-  };
-
   return (
-    <div 
-      className="flex items-center space-x-3 p-3 border rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors group cursor-pointer"
-      onClick={handleOpenInNewTab}
-    >
-      <div className="flex-shrink-0">
-        {getFileIcon(document.mimeType)}
+    <Link to={document.url} target="_blank" data-action="prevent">
+      <div 
+        className="flex items-center space-x-3 p-3 border rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors group cursor-pointer"
+      >
+        <div className="flex-shrink-0">
+          {getFileIcon(document.mimeType)}
+        </div>
+        
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-foreground truncate">
+            {document.name}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {getFileTypeLabel(document.mimeType)} • {formatFileSize(document.size)}
+          </p>
+        </div>
+        
+        <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleDownload}
+            data-action="prevent"
+            className="h-8 w-8 p-0"
+            title="Download document"
+          >
+            <Download className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
-      
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-foreground truncate">
-          {document.name}
-        </p>
-        <p className="text-xs text-muted-foreground">
-          {getFileTypeLabel(document.mimeType)} • {formatFileSize(document.size)}
-        </p>
-      </div>
-      
-      <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleDownload}
-          className="h-8 w-8 p-0"
-          title="Download document"
-        >
-          <Download className="h-4 w-4" />
-        </Button>
-      </div>
-    </div>
+    </Link>
   );
 } 

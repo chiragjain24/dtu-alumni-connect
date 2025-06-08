@@ -46,13 +46,10 @@ export function DeleteTweetDialog({ tweet, onDeleteSuccess }: DeleteTweetDialogP
       <DropdownMenuItem 
         onSelect={(e) => {
           e.preventDefault()
-          e.stopPropagation()
           setIsOpen(true)
         }}
-        onClick={(e) => {
-          e.stopPropagation()
-        }}
         className="text-red-600 focus:text-red-600"
+        data-action="prevent"
         disabled={deleteMutation.isPending}
       >
         <Trash2 className="w-4 h-4 mr-2" />
