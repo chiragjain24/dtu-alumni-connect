@@ -16,6 +16,7 @@ import { toast } from 'sonner'
 import { TweetMedia } from './tweet-media'
 import { DeleteTweetDialog } from './delete-tweet-dialog'
 import { Link } from 'react-router-dom'
+import { formatTimeAgo } from '@/lib/utils'
 
 interface TweetCardProps {
   tweet: Tweet
@@ -74,16 +75,7 @@ export function TweetCard({
     }
   }
   
-  const formatTimeAgo = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-    
-    if (diffInSeconds < 60) return `${diffInSeconds}s`;
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h`;
-    return `${Math.floor(diffInSeconds / 86400)}d`;
-  };
+
 
   // Centralized click handler that determines action based on data attributes
   const handleContainerClick = (e: React.MouseEvent) => {
@@ -132,7 +124,7 @@ export function TweetCard({
             >
               <AvatarImage src={tweet.authorImage || undefined} alt={`${tweet.authorName} avatar`} />
               <AvatarFallback>
-                {tweet.authorName?.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
+                {tweet.authorName?.split(' ')[0][0]?.toUpperCase()}
               </AvatarFallback>
             </Avatar>
           </ProfileHoverCard>
@@ -140,7 +132,7 @@ export function TweetCard({
         
         <div className="flex-1">
           <div className="flex items-center space-x-2">
-            <Link to={`/profile/${tweet.authorUsername}`} data-action="prevent">
+            <Link to={`/profile/${tweet.authorUsername}`} className="max-sm:pointer-events-none" data-action="prevent">
               <h3 className="font-bold text-foreground hover:underline" >
                 {tweet.authorName}
               </h3>

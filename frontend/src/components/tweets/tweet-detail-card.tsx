@@ -76,7 +76,6 @@ export function TweetDetailCard({
           break
       }
     } catch (error) {
-      toast.error('Failed to share tweet')
       console.error('Share error:', error)
     }
   }
@@ -135,7 +134,7 @@ export function TweetDetailCard({
             >
               <AvatarImage src={tweet.authorImage || undefined} alt={`${tweet.authorName} avatar`} />
               <AvatarFallback>
-                {tweet.authorName?.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
+                {tweet.authorName?.split(' ')[0][0]?.toUpperCase()}
               </AvatarFallback>
             </Avatar>
           </ProfileHoverCard>

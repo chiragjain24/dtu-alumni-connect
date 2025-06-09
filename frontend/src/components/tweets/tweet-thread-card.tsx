@@ -15,6 +15,7 @@ import { useSession } from '@/lib/auth-client'
 import { toast } from 'sonner'
 import { TweetMedia } from './tweet-media'
 import { DeleteTweetDialog } from './delete-tweet-dialog'
+import { formatTimeAgo } from '@/lib/utils'
 
 interface TweetThreadCardProps {
   tweet: Tweet
@@ -71,21 +72,11 @@ export function TweetThreadCard({
           break
       }
     } catch (error) {
-      toast.error('Failed to share tweet')
       console.error('Share error:', error)
     }
   }
   
-  const formatTimeAgo = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-    
-    if (diffInSeconds < 60) return `${diffInSeconds}s`;
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h`;
-    return `${Math.floor(diffInSeconds / 86400)}d`;
-  };
+
 
   // Centralized click handler that determines action based on data attributes
   const handleContainerClick = (e: React.MouseEvent) => {
@@ -141,7 +132,7 @@ export function TweetThreadCard({
             >
               <AvatarImage src={tweet.authorImage || undefined} alt={`${tweet.authorName} avatar`} />
               <AvatarFallback>
-                {tweet.authorName?.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
+                {tweet.authorName?.split(' ')[0][0]?.toUpperCase()}
               </AvatarFallback>
             </Avatar>
           </ProfileHoverCard>
@@ -150,7 +141,7 @@ export function TweetThreadCard({
         
         <div className="flex-1">
           <div className="flex items-center space-x-2">
-            <Link to={`/profile/${tweet.authorUsername}`} data-action="prevent">
+            <Link to={`/profile/${tweet.authorUsername}`} className="max-sm:pointer-events-none" data-action="prevent">
               <h3 className="font-bold text-foreground hover:underline">{tweet.authorName}</h3>
             </Link>
             <span className="text-muted-foreground">@{tweet.authorUsername}</span>

@@ -159,7 +159,7 @@ export function useTweet(id: string) {
     queryFn: async () => {
       const response = await api.tweets[':id'].$get({ param: { id } });
       if (!response.ok) {
-        throw new Error('Failed to fetch tweet');
+        throw new Error('Failed to fetch tweet', { cause: response.status });
       }
       const data = await response.json();
       return {
@@ -172,6 +172,12 @@ export function useTweet(id: string) {
     refetchOnWindowFocus: false,
     refetchInterval: 300000, // 5 minutes
     staleTime: 10000, // 10 seconds
+    retry: (failureCount, error) => {
+      if (error instanceof Error && error.cause === 404) {
+        return false
+      }
+      return failureCount < 3
+    }
   });
 }
 

@@ -13,7 +13,7 @@ import Loader from '@/components/loader'
 export default function Profile() {
   const navigate = useNavigate()
   const { username } = useParams()
-  const { data: myProfile, isPending: myProfilePending } = useGetMyProfile()
+  const { data: myProfile, isPending: myProfilePending } = useGetMyProfile(!username)
   const { data: userProfile, isPending: userProfilePending } = useGetUserProfile(username || '')
   const [activeTab, setActiveTab] = useState<'tweets' | 'replies' | 'media' | 'likes'>('tweets')
 

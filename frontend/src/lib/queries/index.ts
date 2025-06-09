@@ -1,7 +1,7 @@
 import { api } from '../utils'
 import { useQuery } from '@tanstack/react-query'
 
-const useGetMyProfile = () => {
+const useGetMyProfile = (enabled: boolean = true) => {
     const { data, isPending } = useQuery({
         queryKey: ['my-profile'],
         queryFn: async () => {
@@ -13,6 +13,7 @@ const useGetMyProfile = () => {
         },
         refetchOnWindowFocus: false,
         refetchOnMount: false,
+        enabled: enabled,
       })
     
   return { data, isPending };

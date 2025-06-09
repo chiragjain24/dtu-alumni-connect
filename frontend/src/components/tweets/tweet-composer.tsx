@@ -102,7 +102,7 @@ export function TweetComposer({
         <Avatar className="w-10 h-10">
           <AvatarImage src={user.image || undefined} alt={`${user.name} avatar`} />
           <AvatarFallback>
-            {user.name.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
+            {user.name.split(' ')[0][0]?.toUpperCase()}
           </AvatarFallback>
         </Avatar>
         

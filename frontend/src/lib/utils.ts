@@ -15,3 +15,14 @@ export const api = hc<AppType>(import.meta.env.VITE_BACKEND_URL!,{
     });
   }),
 }).api;
+
+export function formatTimeAgo(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInSeconds = Math.max(0, Math.floor((now.getTime() - date.getTime()) / 1000));
+  
+  if (diffInSeconds < 60) return `${diffInSeconds}s`;
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m`;
+  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h`;
+  return `${Math.floor(diffInSeconds / 86400)}d`;
+}
