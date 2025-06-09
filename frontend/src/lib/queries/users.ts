@@ -1,7 +1,7 @@
 import { api } from '../utils'
 import { useQuery } from '@tanstack/react-query'
 
-const useGetUserProfile = (username: string) => {
+export const useGetUserProfile = (username: string, enabled: boolean = true) => {
   const { data, isPending, error } = useQuery({
     queryKey: ['user-profile', username],
     queryFn: async () => {
@@ -13,11 +13,10 @@ const useGetUserProfile = (username: string) => {
       }
       return res.json()
     },
-    enabled: !!username,
+    enabled: !!username && enabled,
     refetchOnWindowFocus: false,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   })
 
   return { data, isPending, error }
 }
-
-export default useGetUserProfile 

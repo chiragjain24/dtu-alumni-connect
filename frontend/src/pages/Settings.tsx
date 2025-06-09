@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { User, Shield, Bell, Palette, LogOut, Save, ArrowLeft } from 'lucide-react'
+import { signOut } from '@/lib/auth-client'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
@@ -74,6 +75,14 @@ export default function Settings() {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
+  }
+
+  const handleSignOut = async () => {
+    try {
+      await signOut()
+    } catch (error) {
+      console.error('Sign out failed:', error)
+    }
   }
 
   useEffect(() => {
@@ -209,6 +218,27 @@ export default function Settings() {
 
   const renderAccountSettings = () => (
     <div className="space-y-6">
+
+      {/* Mobile Sign Out Card */}
+      <Card className="sm:hidden">
+        <CardHeader>
+          <CardTitle>Sign Out</CardTitle>
+          <CardDescription>
+            Sign out of your account
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button 
+            variant="outline" 
+            className="w-full"
+            onClick={handleSignOut}
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Sign Out
+          </Button>
+        </CardContent>
+      </Card>
+      
       <Card>
         <CardHeader>
           <CardTitle>Account Information</CardTitle>
@@ -243,7 +273,7 @@ export default function Settings() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button variant="destructive" className="w-full md:w-auto">
+          <Button variant="destructive" disabled className="w-full md:w-auto">
             <LogOut className="w-4 h-4 mr-2" />
             Delete Account
           </Button>

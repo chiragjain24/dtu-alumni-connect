@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
+import { ProfileHoverCard } from '@/components/ui/profile-hover-card'
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -127,14 +128,18 @@ export function TweetDetailCard({
   return (
     <div className="p-4 pb-0" onClick={handleContainerClick}>
       <div className="flex space-x-3 mb-3">
-        <Link to={`/profile/${tweet.authorUsername}`} data-action="prevent">
-          <Avatar className="w-10 h-10 hover:opacity-80 transition-opacity">
-            <AvatarImage src={tweet.authorImage || undefined} alt={`${tweet.authorName} avatar`} />
-            <AvatarFallback>
-              {tweet.authorName?.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-        </Link>
+        <div className="">
+          <ProfileHoverCard username={tweet.authorUsername || ''}>
+            <Avatar className="w-9 h-9 hover:opacity-80 transition-opacity" data-action="prevent"
+              onClick={() => navigate(`/profile/${tweet.authorUsername}`)}
+            >
+              <AvatarImage src={tweet.authorImage || undefined} alt={`${tweet.authorName} avatar`} />
+              <AvatarFallback>
+                {tweet.authorName?.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+          </ProfileHoverCard>
+        </div>
         
         <div className="flex-1">
           <div className="flex items-center space-x-2">
@@ -142,9 +147,7 @@ export function TweetDetailCard({
               <Link to={`/profile/${tweet.authorUsername}`} data-action="prevent">
                 <h3 className="font-bold text-foreground hover:underline">{tweet.authorName}</h3>
               </Link>
-              <Link to={`/profile/${tweet.authorUsername}`} data-action="prevent">
-                <span className="text-muted-foreground">@{tweet.authorUsername}</span>
-              </Link>
+              <span className="text-muted-foreground">@{tweet.authorUsername}</span>
             </div>
 
             <div className="ml-auto">

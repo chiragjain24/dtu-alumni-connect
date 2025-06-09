@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
+import { ProfileHoverCard } from '@/components/ui/profile-hover-card'
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -132,26 +133,27 @@ export function TweetThreadCard({
         <div className="absolute left-9 bottom-0 w-0.5 bg-border h-1/2"></div>
       )}
       
-      <div className="flex space-x-3 relative">
-        <Link to={`/profile/${tweet.authorUsername}`} data-action="prevent">
-          <Avatar className="w-10 h-10 relative z-10 bg-background border-2 border-background hover:opacity-80 transition-opacity">
-            <AvatarImage src={tweet.authorImage || undefined} alt={`${tweet.authorName} avatar`} />
-            <AvatarFallback>
-              {tweet.authorName?.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-        </Link>
+      <div className="flex space-x-3">
+        <div className="">
+          <ProfileHoverCard username={tweet.authorUsername || ''}>
+            <Avatar className="w-9 h-9 hover:opacity-80 transition-opacity" data-action="prevent"
+              onClick={() => navigate(`/profile/${tweet.authorUsername}`)}
+            >
+              <AvatarImage src={tweet.authorImage || undefined} alt={`${tweet.authorName} avatar`} />
+              <AvatarFallback>
+                {tweet.authorName?.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+          </ProfileHoverCard>
+        </div>
+
         
         <div className="flex-1">
           <div className="flex items-center space-x-2">
             <Link to={`/profile/${tweet.authorUsername}`} data-action="prevent">
               <h3 className="font-bold text-foreground hover:underline">{tweet.authorName}</h3>
             </Link>
-            <Link to={`/profile/${tweet.authorUsername}`} data-action="prevent">
-              {tweet.authorUsername && (
-                <span className="text-muted-foreground">@{tweet.authorUsername}</span>
-              )}
-            </Link>
+            <span className="text-muted-foreground">@{tweet.authorUsername}</span>
             <span className="text-muted-foreground">·</span>
             <span className="text-muted-foreground">{formatTimeAgo(tweet.createdAt)}</span>
             <div className="ml-auto">

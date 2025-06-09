@@ -20,7 +20,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { TweetComposerModal } from '@/components/tweets/tweet-composer-modal'
@@ -171,11 +170,6 @@ const LeftSidebar = () => {
                   </DropdownMenuItem>
                 )
               })}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleSignOut}>
-                <LogOut className='w-5 h-5 mr-3' />
-                Sign Out
-              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
