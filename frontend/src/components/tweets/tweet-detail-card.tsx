@@ -178,7 +178,7 @@ export function TweetDetailCard({
       
       {/* Tweet Content - Larger text for detail view */}
       <div className="mb-4">
-        <p className="text-foreground text-xl leading-relaxed whitespace-pre-wrap">{tweet.content}</p>
+        <p className="text-foreground text-lg leading-relaxed whitespace-pre-wrap">{tweet.content}</p>
         <TweetMedia mediaItems={tweet.mediaItems || []} />
       </div>
 
