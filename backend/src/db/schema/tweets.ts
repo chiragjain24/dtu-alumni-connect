@@ -37,6 +37,13 @@ export const retweets = pgTable("retweets", {
   createdAt: timestamp('created_at').$defaultFn(() => new Date()).notNull(),
 });
 
+export const bookmarks = pgTable("bookmarks", {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+  tweetId: text('tweet_id').notNull().references(() => tweets.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at').$defaultFn(() => new Date()).notNull(),
+});
+
 export const follows = pgTable("follows", {
   id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
   followerId: text('follower_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
@@ -68,6 +75,7 @@ export const tweetsRelations = relations(tweets, ({ one, many }) => ({
   }),
   likes: many(likes),
   retweetRecords: many(retweets),
+  bookmarks: many(bookmarks),
 }));
 
 export const likesRelations = relations(likes, ({ one }) => ({
@@ -92,6 +100,17 @@ export const retweetsRelations = relations(retweets, ({ one }) => ({
   }),
 }));
 
+export const bookmarksRelations = relations(bookmarks, ({ one }) => ({
+  user: one(user, {
+    fields: [bookmarks.userId],
+    references: [user.id],
+  }),
+  tweet: one(tweets, {
+    fields: [bookmarks.tweetId],
+    references: [tweets.id],
+  }),
+}));
+
 export const followsRelations = relations(follows, ({ one }) => ({
   follower: one(user, {
     fields: [follows.followerId],
@@ -109,6 +128,7 @@ export const userRelations = relations(user, ({ many }) => ({
   tweets: many(tweets),
   likes: many(likes),
   retweets: many(retweets),
+  bookmarks: many(bookmarks),
   followers: many(follows, {
     relationName: "following",
   }),

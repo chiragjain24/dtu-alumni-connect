@@ -7,10 +7,10 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu'
-import { MoreHorizontal, Heart, MessageCircle, Repeat2, Share2, Copy, ExternalLink, Flag } from 'lucide-react'
+import { MoreHorizontal, Heart, MessageCircle, Share2, Copy, ExternalLink, Flag, Bookmark } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import type { Tweet } from '@/types/types'
-import { useLikeTweet, useRetweetTweet } from '@/lib/queries/tweets'
+import { useLikeTweet, useBookmarkTweet } from '@/lib/queries/tweets'
 import { useSession } from '@/lib/auth-client'
 import { toast } from 'sonner'
 import { TweetMedia } from './tweet-media'
@@ -28,7 +28,7 @@ export function TweetCard({
   const navigate = useNavigate()
   const { data: session } = useSession()
   const likeMutation = useLikeTweet()
-  const retweetMutation = useRetweetTweet()
+  const bookmarkMutation = useBookmarkTweet()
   
   // Check if current user is the author of this tweet
   const isAuthor = session?.user.id === tweet.authorId
@@ -37,8 +37,8 @@ export function TweetCard({
     await likeMutation.mutateAsync({tweet, isLike: !tweet.isLikedByUser})
   }
 
-  const handleRetweet = async () => {
-    await retweetMutation.mutateAsync(tweet)
+  const handleBookmark = async () => {
+    await bookmarkMutation.mutateAsync({tweet, isBookmark: !tweet.isBookmarkedByUser})
   }
 
   const handleReply = () => {
@@ -93,8 +93,8 @@ export function TweetCard({
       case 'like':
         handleLike()
         break
-      case 'retweet':
-        handleRetweet()
+      case 'bookmark':
+        handleBookmark()
         break
       case 'reply':
         handleReply()
@@ -181,20 +181,6 @@ export function TweetCard({
               <span className="text-sm">{tweet.repliesCount}</span>
             </Button>
             
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className={`flex items-center space-x-2 rounded-full ${
-                tweet.isRetweetedByUser 
-                  ? 'text-green-600' 
-                  : 'text-muted-foreground hover:text-green-600'
-              }`}
-              data-action="retweet"
-              disabled={retweetMutation.isPending}
-            >
-              <Repeat2 className="w-4 h-4" />
-              <span className="text-sm">{tweet.retweetsCount}</span>
-            </Button>
             
             <Button 
               variant="ghost" 
@@ -209,6 +195,21 @@ export function TweetCard({
             >
               <Heart className={`w-4 h-4 ${tweet.isLikedByUser ? 'fill-current' : ''}`} />
               <span className="text-sm">{tweet.likesCount}</span>
+            </Button>
+            
+            
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className={`flex items-center space-x-2 rounded-full ${
+                tweet.isBookmarkedByUser 
+                  ? 'text-blue-500' 
+                  : 'text-muted-foreground hover:text-blue-500'
+              }`}
+              data-action="bookmark"
+              disabled={bookmarkMutation.isPending}
+            >
+              <Bookmark className={`w-4 h-4 ${tweet.isBookmarkedByUser ? 'fill-current' : ''}`} />
             </Button>
             
             <DropdownMenu>

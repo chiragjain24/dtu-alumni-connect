@@ -134,6 +134,13 @@ function createRetweetUpdater(isRetweeted: boolean) {
   });
 }
 
+function createBookmarkUpdater(isBookmarked: boolean) {
+  return (tweet: Tweet): Tweet => ({
+    ...tweet,
+    isBookmarkedByUser: isBookmarked,
+  });
+}
+
 // Timeline tweets query
 export function useTimeline() {
   return useQuery({
@@ -375,6 +382,38 @@ export function useRetweetTweet() {
       
       // Optimistically update cache
       return updateTweetAcrossAllCaches(queryClient, tweet.id, createRetweetUpdater(isRetweet));
+    },
+    onError: (_, __, context) => {
+      // Rollback on error
+      if (context) {
+        rollbackTweetUpdates(queryClient, context);
+      }
+    }
+    // No onSuccess or onSettled - optimistic updates are sufficient
+  });
+}
+
+// Bookmark/unbookmark tweet mutation
+export function useBookmarkTweet() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({tweet, isBookmark}: {tweet: Tweet, isBookmark: boolean}) => {
+      const response = await api.tweets[':id'].bookmark.$post({ 
+        param: { id: tweet.id },
+        json: { isBookmark: isBookmark }
+      });
+      if (!response.ok) {
+        throw new Error('Failed to toggle bookmark');
+      }
+      return await response.json();
+    },
+    onMutate: async ({tweet, isBookmark}) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['tweets'] });
+      
+      // Optimistically update cache
+      return updateTweetAcrossAllCaches(queryClient, tweet.id, createBookmarkUpdater(isBookmark));
     },
     onError: (_, __, context) => {
       // Rollback on error

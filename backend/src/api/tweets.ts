@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { db } from '../db';
-import { tweets, likes, retweets } from '../db/schema/tweets';
+import { tweets, likes, retweets, bookmarks } from '../db/schema/tweets';
 import { user as users } from '../db/schema/auth';
 import { eq, desc, and, sql, isNull } from 'drizzle-orm';
 import { HTTPException } from 'hono/http-exception';
@@ -70,9 +70,10 @@ const app = new Hono<{
         authorName: users.name,
         authorUsername: users.username,
         authorImage: users.image,
-        // Use conditional aggregation to check if user liked/retweeted
+        // Use conditional aggregation to check if user liked/retweeted/bookmarked
         isLikedByUser: sql<boolean>`CASE WHEN ${likes.userId} IS NOT NULL THEN true ELSE false END`,
         isRetweetedByUser: sql<boolean>`CASE WHEN ${retweets.userId} IS NOT NULL THEN true ELSE false END`,
+        isBookmarkedByUser: sql<boolean>`CASE WHEN ${bookmarks.userId} IS NOT NULL THEN true ELSE false END`,
       })
       .from(tweets)
       .leftJoin(users, eq(tweets.authorId, users.id))
@@ -83,6 +84,10 @@ const app = new Hono<{
       .leftJoin(retweets, and(
         eq(retweets.tweetId, tweets.id),
         eq(retweets.userId, currentUser!.id)
+      ))
+      .leftJoin(bookmarks, and(
+        eq(bookmarks.tweetId, tweets.id),
+        eq(bookmarks.userId, currentUser!.id)
       ))
       .where(isNull(tweets.parentTweetId)) // Only top-level tweets
       .orderBy(desc(tweets.createdAt))
@@ -146,9 +151,10 @@ const app = new Hono<{
       authorName: currentUser!.name,
       authorUsername: currentUser!.username,
       authorImage: currentUser!.image,
-      // New tweets are never liked/retweeted by the author initially
+      // New tweets are never liked/retweeted/bookmarked by the author initially
       isLikedByUser: false,
       isRetweetedByUser: false,
+      isBookmarkedByUser: false,
     };
 
     return c.json({ tweet: tweetResponse }, 201);
@@ -188,6 +194,7 @@ const app = new Hono<{
           authorImage: users.image,
           isLikedByUser: sql<boolean>`CASE WHEN ${likes.userId} IS NOT NULL THEN true ELSE false END`,
           isRetweetedByUser: sql<boolean>`CASE WHEN ${retweets.userId} IS NOT NULL THEN true ELSE false END`,
+          isBookmarkedByUser: sql<boolean>`CASE WHEN ${bookmarks.userId} IS NOT NULL THEN true ELSE false END`,
         })
         .from(tweets)
         .leftJoin(users, eq(tweets.authorId, users.id))
@@ -198,6 +205,10 @@ const app = new Hono<{
         .leftJoin(retweets, and(
           eq(retweets.tweetId, tweets.id),
           eq(retweets.userId, currentUser!.id)
+        ))
+        .leftJoin(bookmarks, and(
+          eq(bookmarks.tweetId, tweets.id),
+          eq(bookmarks.userId, currentUser!.id)
         ))
         .where(eq(tweets.id, id))
         .limit(1),
@@ -222,6 +233,7 @@ const app = new Hono<{
           authorImage: users.image,
           isLikedByUser: sql<boolean>`CASE WHEN ${likes.userId} IS NOT NULL THEN true ELSE false END`,
           isRetweetedByUser: sql<boolean>`CASE WHEN ${retweets.userId} IS NOT NULL THEN true ELSE false END`,
+          isBookmarkedByUser: sql<boolean>`CASE WHEN ${bookmarks.userId} IS NOT NULL THEN true ELSE false END`,
         })
         .from(tweets)
         .leftJoin(users, eq(tweets.authorId, users.id))
@@ -232,6 +244,10 @@ const app = new Hono<{
         .leftJoin(retweets, and(
           eq(retweets.tweetId, tweets.id),
           eq(retweets.userId, currentUser!.id)
+        ))
+        .leftJoin(bookmarks, and(
+          eq(bookmarks.tweetId, tweets.id),
+          eq(bookmarks.userId, currentUser!.id)
         ))
         .where(sql`
           tweets.id IN (
@@ -275,6 +291,7 @@ const app = new Hono<{
           authorImage: users.image,
           isLikedByUser: sql<boolean>`CASE WHEN ${likes.userId} IS NOT NULL THEN true ELSE false END`,
           isRetweetedByUser: sql<boolean>`CASE WHEN ${retweets.userId} IS NOT NULL THEN true ELSE false END`,
+          isBookmarkedByUser: sql<boolean>`CASE WHEN ${bookmarks.userId} IS NOT NULL THEN true ELSE false END`,
         })
         .from(tweets)
         .leftJoin(users, eq(tweets.authorId, users.id))
@@ -285,6 +302,10 @@ const app = new Hono<{
         .leftJoin(retweets, and(
           eq(retweets.tweetId, tweets.id),
           eq(retweets.userId, currentUser!.id)
+        ))
+        .leftJoin(bookmarks, and(
+          eq(bookmarks.tweetId, tweets.id),
+          eq(bookmarks.userId, currentUser!.id)
         ))
         .where(sql`
           parent_tweet_id IS NOT NULL AND (
@@ -408,6 +429,7 @@ const app = new Hono<{
         authorImage: users.image,
         isLikedByUser: sql<boolean>`CASE WHEN ${likes.userId} IS NOT NULL THEN true ELSE false END`,
         isRetweetedByUser: sql<boolean>`CASE WHEN ${retweets.userId} IS NOT NULL THEN true ELSE false END`,
+        isBookmarkedByUser: sql<boolean>`CASE WHEN ${bookmarks.userId} IS NOT NULL THEN true ELSE false END`,
       })
       .from(tweets)
       .leftJoin(users, eq(tweets.authorId, users.id))
@@ -418,6 +440,10 @@ const app = new Hono<{
       .leftJoin(retweets, and(
         eq(retweets.tweetId, tweets.id),
         eq(retweets.userId, currentUser!.id)
+      ))
+      .leftJoin(bookmarks, and(
+        eq(bookmarks.tweetId, tweets.id),
+        eq(bookmarks.userId, currentUser!.id)
       ))
       .where(and(
         eq(tweets.authorId, id),
@@ -576,6 +602,64 @@ const app = new Hono<{
       throw error;
     }
     throw new HTTPException(500, { message: 'Failed to toggle retweet' });
+  }
+})
+
+// POST /api/tweets/:id/bookmark - Bookmark/unbookmark tweet
+.post('/:id/bookmark', requireAuth, zValidator('param', tweetParamsSchema), zValidator('json', z.object({ isBookmark: z.boolean()})), async (c) => {
+  const currentUser = c.get('user');
+  const { id } = c.req.valid('param');
+  const { isBookmark } = c.req.valid('json');
+
+  try {
+    // Single query to check both tweet existence and existing bookmark status
+    const [tweetWithBookmark] = await db
+      .select({
+        tweetId: tweets.id,
+        bookmarkId: bookmarks.id,
+      })
+      .from(tweets)
+      .leftJoin(bookmarks, and(
+        eq(bookmarks.tweetId, tweets.id),
+        eq(bookmarks.userId, currentUser!.id)
+      ))
+      .where(eq(tweets.id, id))
+      .limit(1);
+
+    if (!tweetWithBookmark?.tweetId) {
+      throw new HTTPException(404, { message: 'Tweet not found' });
+    }
+
+    const existingBookmark = !!tweetWithBookmark.bookmarkId;
+    
+    if(isBookmark && !existingBookmark) {
+      // Bookmark the tweet - insert bookmark record
+      await db.insert(bookmarks).values({
+        userId: currentUser!.id,
+        tweetId: id,
+      });
+
+      return c.json({ message: 'Tweet bookmarked', bookmarked: true });
+    }
+    
+    if(!isBookmark && existingBookmark) {
+      // Unbookmark the tweet - delete bookmark record
+      await db.delete(bookmarks).where(and(
+        eq(bookmarks.userId, currentUser!.id),
+        eq(bookmarks.tweetId, id)
+      ));
+
+      return c.json({ message: 'Tweet unbookmarked', bookmarked: false });
+    } 
+    
+    return c.json({ message: 'Tweet already bookmarked/unbookmarked', bookmarked: isBookmark });
+
+  } catch (error) {
+    console.error('Error toggling bookmark:', error);
+    if (error instanceof HTTPException) {
+      throw error;
+    }
+    throw new HTTPException(500, { message: 'Failed to toggle bookmark' });
   }
 })
 
