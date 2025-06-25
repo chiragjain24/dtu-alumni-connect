@@ -108,6 +108,8 @@ export default function ProfileSetup() {
                     onChange={(e) => handleInputChange('username', e.target.value)}
                     placeholder="@johndoe"
                     required
+                    minLength={3}
+                    maxLength={50}
                   />
                 </div>
                 
@@ -116,8 +118,8 @@ export default function ProfileSetup() {
                   <Input
                     id="graduationYear"
                     type="number"
-                    min="1960"
-                    max={new Date().getFullYear()}
+                    min="1940"
+                    max={new Date().getFullYear()+6}
                     value={formData.graduationYear}
                     onChange={(e) => handleInputChange('graduationYear', e.target.value)}
                     placeholder="2020"
@@ -127,7 +129,18 @@ export default function ProfileSetup() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="branch">Branch *</Label>
+                <Label htmlFor="linkedinUrl">LinkedIn Profile</Label>
+                <Input
+                  id="linkedinUrl"
+                  type="url"
+                  value={formData.linkedinUrl}
+                  onChange={(e) => handleInputChange('linkedinUrl', e.target.value)}
+                  placeholder="https://linkedin.com/in/yourprofile"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="branch">Branch</Label>
                 <Select value={formData.branch} onValueChange={(value) => handleInputChange('branch', value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select your branch" />
@@ -140,17 +153,6 @@ export default function ProfileSetup() {
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="bio">Bio</Label>
-                <Textarea
-                  id="bio"
-                  value={formData.bio}
-                  onChange={(e) => handleInputChange('bio', e.target.value)}
-                  placeholder="Tell us about yourself..."
-                  rows={3}
-                />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -176,20 +178,20 @@ export default function ProfileSetup() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="linkedinUrl">LinkedIn Profile</Label>
-                <Input
-                  id="linkedinUrl"
-                  type="url"
-                  value={formData.linkedinUrl}
-                  onChange={(e) => handleInputChange('linkedinUrl', e.target.value)}
-                  placeholder="https://linkedin.com/in/yourprofile"
+                <Label htmlFor="bio">Bio</Label>
+                <Textarea
+                  id="bio"
+                  value={formData.bio}
+                  onChange={(e) => handleInputChange('bio', e.target.value)}
+                  placeholder="Tell us about yourself..."
+                  rows={3}
                 />
               </div>
 
               <Button 
                 type="submit" 
                 className="w-full"
-                disabled={updateProfileMutation.isPending}
+                disabled={updateProfileMutation.isPending || !formData.username || !formData.graduationYear}
               >
                 {updateProfileMutation.isPending ? 'Saving...' : 'Complete Profile'}
               </Button>

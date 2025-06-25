@@ -13,6 +13,7 @@ import { api } from '../lib/utils'
 import useGetMyProfile from '@/lib/queries'
 import Loader from '@/components/loader'
 import { ModeToggle } from '@/components/others/mode-toggle'
+import { toast } from 'sonner'
 
 const DTU_BRANCHES = [
   'Computer Science and Engineering',
@@ -54,7 +55,6 @@ export default function Settings() {
         json: {
           ...data,
           graduationYear: data.graduationYear ? parseInt(data.graduationYear) : undefined,
-          linkedinUrl: data.linkedinUrl || undefined
         }
       })
       if (!res.ok) {
@@ -65,6 +65,14 @@ export default function Settings() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-profile'] })
       // Show success message or toast here
+      toast.success('Profile updated successfully',{
+        position: 'top-center',
+      })
+    },
+    onError: () => {
+      toast.error('Failed to update profile',{
+        position: 'top-center',
+      })
     }
   })
 
@@ -124,6 +132,8 @@ export default function Settings() {
               <Input
                 id="username"
                 value={formData.username}
+                minLength={3}
+                maxLength={50}
                 onChange={(e) => handleInputChange('username', e.target.value)}
                 placeholder="@johndoe"
               />
@@ -134,8 +144,8 @@ export default function Settings() {
               <Input
                 id="graduationYear"
                 type="number"
-                min="1960"
-                max={new Date().getFullYear()}
+                min="1940"
+                max={new Date().getFullYear()+6}
                 value={formData.graduationYear}
                 onChange={(e) => handleInputChange('graduationYear', e.target.value)}
                 placeholder="2020"
@@ -144,7 +154,18 @@ export default function Settings() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="branch">Branch*</Label>
+            <Label htmlFor="linkedinUrl">LinkedIn Profile</Label>
+            <Input
+              id="linkedinUrl"
+              type="url"
+              value={formData.linkedinUrl}
+              onChange={(e) => handleInputChange('linkedinUrl', e.target.value)}
+              placeholder="https://linkedin.com/in/yourprofile"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="branch">Branch</Label>
             <Select value={formData.branch} onValueChange={(value) => handleInputChange('branch', value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select your branch" />
@@ -157,17 +178,6 @@ export default function Settings() {
                 ))}
               </SelectContent>
             </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="bio">Bio</Label>
-            <Textarea
-              id="bio"
-              value={formData.bio}
-              onChange={(e) => handleInputChange('bio', e.target.value)}
-              placeholder="Tell us about yourself..."
-              rows={3}
-            />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -193,19 +203,19 @@ export default function Settings() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="linkedinUrl">LinkedIn Profile</Label>
-            <Input
-              id="linkedinUrl"
-              type="url"
-              value={formData.linkedinUrl}
-              onChange={(e) => handleInputChange('linkedinUrl', e.target.value)}
-              placeholder="https://linkedin.com/in/yourprofile"
+            <Label htmlFor="bio">Bio</Label>
+            <Textarea
+              id="bio"
+              value={formData.bio}
+              onChange={(e) => handleInputChange('bio', e.target.value)}
+              placeholder="Tell us about yourself..."
+              rows={3}
             />
           </div>
 
           <Button 
             type="submit" 
-            disabled={updateProfileMutation.isPending || !formData.username || !formData.graduationYear || !formData.branch}
+            disabled={updateProfileMutation.isPending || !formData.username || !formData.graduationYear}
             className="w-full md:w-auto"
           >
             <Save className="w-4 h-4 mr-2" />

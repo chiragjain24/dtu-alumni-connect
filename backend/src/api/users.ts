@@ -10,10 +10,10 @@ import { HTTPException } from 'hono/http-exception'
 
 // Profile setup/update schema
 const profileUpdateSchema = z.object({
-    username: z.string().min(1).max(50).regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores"),
+    username: z.string().min(3).max(50).regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores"),
     bio: z.string().max(500).optional(),
     graduationYear: z.number().int().min(1941).max(2030).optional(),
-    branch: z.string().min(1).max(100).optional(),
+    branch: z.string().max(100).optional(),
     currentCompany: z.string().max(100).optional(),
     currentRole: z.string().max(100).optional(),
     linkedinUrl: z.string().url().optional().or(z.literal("")),

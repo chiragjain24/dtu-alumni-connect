@@ -177,7 +177,7 @@ export function useTweet(id: string) {
     },
     enabled: !!id,
     refetchOnWindowFocus: false,
-    refetchInterval: 300000, // 5 minutes
+    refetchInterval: 30000, // 30 seconds
     staleTime: 10000, // 10 seconds
     retry: (failureCount, error) => {
       if (error instanceof Error && error.cause === 404) {
