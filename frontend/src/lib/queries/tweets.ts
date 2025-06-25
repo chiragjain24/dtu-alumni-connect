@@ -146,7 +146,7 @@ export function useTimeline() {
   return useQuery({
     queryKey: ['tweets', 'timeline'],
     queryFn: async () => {
-      const response = await api.tweets.$get();
+      const response = await api.tweets.timeline.$get();
       if (!response.ok) {
         throw new Error('Failed to fetch timeline');
       }
@@ -155,7 +155,7 @@ export function useTimeline() {
     },
     refetchOnWindowFocus: false,
     refetchInterval: 300000, // 5 minutes
-    staleTime: 60000, // 1 minute
+    staleTime: 30000, // 30 seconds
   });
 }
 
@@ -164,7 +164,7 @@ export function useTweet(id: string) {
   return useQuery({
     queryKey: ['tweets', id],
     queryFn: async () => {
-      const response = await api.tweets[':id'].$get({ param: { id } });
+      const response = await api.tweets.tweet[':id'].$get({ param: { id } });
       if (!response.ok) {
         throw new Error('Failed to fetch tweet', { cause: response.status });
       }
@@ -202,9 +202,28 @@ export function useUserTweets(userId: string) {
     },
     enabled: !!userId,
     refetchOnWindowFocus: false,
+    refetchInterval: 300000, // 5 minutes
+    staleTime: 10000, // 10 seconds
   });
 }
 
+// Bookmarked tweets query
+export function useBookmarkedTweets() {
+  return useQuery({
+    queryKey: ['tweets', 'bookmarks'],
+    queryFn: async () => {
+      const response = await api.tweets.bookmarks.$get();
+      if (!response.ok) {
+        throw new Error('Failed to fetch bookmarked tweets');
+      }
+      const data = await response.json();
+      return data.tweets;
+    },
+    refetchOnWindowFocus: false,
+    refetchInterval: 300000, // 5 minutes
+    staleTime: 30000, // 30 seconds
+  });
+}
 
 // Create tweet mutation
 export function useCreateTweet() {
@@ -212,7 +231,7 @@ export function useCreateTweet() {
 
   return useMutation({
     mutationFn: async (data: CreateTweetData) => {
-      const response = await api.tweets.$post({ json: data });
+      const response = await api.tweets.create.$post({ json: data });
       if (!response.ok) {
         throw new Error('Failed to create tweet');
       }
@@ -240,7 +259,7 @@ export function useDeleteTweet() {
 
   return useMutation({
     mutationFn: async (tweet: Tweet) => {
-      const response = await api.tweets[':id'].$delete({ param: { id: tweet.id } });
+      const response = await api.tweets.tweet[':id'].$delete({ param: { id: tweet.id } });
       if (!response.ok) {
         throw new Error('Failed to delete tweet');
       }
@@ -415,12 +434,15 @@ export function useBookmarkTweet() {
       // Optimistically update cache
       return updateTweetAcrossAllCaches(queryClient, tweet.id, createBookmarkUpdater(isBookmark));
     },
+    onSuccess: () => {
+      // Invalidate bookmarks query to refetch if needed
+      queryClient.invalidateQueries({ queryKey: ['tweets', 'bookmarks'] });
+    },
     onError: (_, __, context) => {
       // Rollback on error
       if (context) {
         rollbackTweetUpdates(queryClient, context);
       }
     }
-    // No onSuccess or onSettled - optimistic updates are sufficient
   });
 }

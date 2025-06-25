@@ -48,8 +48,8 @@ const app = new Hono<{
     }
   }>()
 
-// GET /api/tweets - Get timeline tweets
-.get('/', requireAuth, async (c) => {
+// GET /api/tweets/timeline - Get timeline tweets
+.get('/timeline', requireAuth, async (c) => {
   const currentUser = c.get('user');
   
   try {
@@ -91,7 +91,7 @@ const app = new Hono<{
       ))
       .where(isNull(tweets.parentTweetId)) // Only top-level tweets
       .orderBy(desc(tweets.createdAt))
-      .limit(20);
+      .limit(100);
 
     return c.json({ tweets: timelineTweets });
   } catch (error) {
@@ -100,8 +100,8 @@ const app = new Hono<{
   }
 })
 
-// POST /api/tweets - Create new tweet
-.post('/', requireAuth, zValidator('json', createTweetSchema), async (c) => {
+// POST /api/tweets/create - Create new tweet
+.post('/create', requireAuth, zValidator('json', createTweetSchema), async (c) => {
   const currentUser = c.get('user');
   const { content, mediaItems, parentTweetId } = c.req.valid('json');
 
@@ -167,8 +167,8 @@ const app = new Hono<{
   }
 })
 
-// GET /api/tweets/:id - Get single tweet
-.get('/:id', requireAuth, zValidator('param', tweetParamsSchema), async (c) => {
+// GET /api/tweets/tweet/:id - Get single tweet
+.get('/tweet/:id', requireAuth, zValidator('param', tweetParamsSchema), async (c) => {
   const currentUser = c.get('user');
   const { id } = c.req.valid('param');
 
@@ -352,8 +352,8 @@ const app = new Hono<{
   }
 })
 
-// DELETE /api/tweets/:id - Delete tweet
-.delete('/:id', requireAuth, zValidator('param', tweetParamsSchema), async (c) => {
+// DELETE /api/tweets/tweet/:id - Delete tweet
+.delete('/tweet/:id', requireAuth, zValidator('param', tweetParamsSchema), async (c) => {
   const currentUser = c.get('user');
   const { id } = c.req.valid('param');
 
@@ -401,61 +401,6 @@ const app = new Hono<{
       throw error;
     }
     throw new HTTPException(500, { message: 'Failed to delete tweet' });
-  }
-})
-
-// GET /api/tweets/user/:id - Get user tweets
-.get('/user/:id', requireAuth, zValidator('param', userParamsSchema), async (c) => {
-  const currentUser = c.get('user');
-  const { id } = c.req.valid('param');
-
-  try {
-    const userTweets = await db
-      .select({
-        id: tweets.id,
-        content: tweets.content,
-        authorId: tweets.authorId,
-        parentTweetId: tweets.parentTweetId,
-        isRetweet: tweets.isRetweet,
-        originalTweetId: tweets.originalTweetId,
-        mediaItems: tweets.mediaItems,
-        likesCount: tweets.likesCount,
-        retweetsCount: tweets.retweetsCount,
-        repliesCount: tweets.repliesCount,
-        createdAt: tweets.createdAt,
-        updatedAt: tweets.updatedAt,
-        authorName: users.name,
-        authorUsername: users.username,
-        authorImage: users.image,
-        isLikedByUser: sql<boolean>`CASE WHEN ${likes.userId} IS NOT NULL THEN true ELSE false END`,
-        isRetweetedByUser: sql<boolean>`CASE WHEN ${retweets.userId} IS NOT NULL THEN true ELSE false END`,
-        isBookmarkedByUser: sql<boolean>`CASE WHEN ${bookmarks.userId} IS NOT NULL THEN true ELSE false END`,
-      })
-      .from(tweets)
-      .leftJoin(users, eq(tweets.authorId, users.id))
-      .leftJoin(likes, and(
-        eq(likes.tweetId, tweets.id),
-        eq(likes.userId, currentUser!.id)
-      ))
-      .leftJoin(retweets, and(
-        eq(retweets.tweetId, tweets.id),
-        eq(retweets.userId, currentUser!.id)
-      ))
-      .leftJoin(bookmarks, and(
-        eq(bookmarks.tweetId, tweets.id),
-        eq(bookmarks.userId, currentUser!.id)
-      ))
-      .where(and(
-        eq(tweets.authorId, id),
-        isNull(tweets.parentTweetId) // Only top-level tweets
-      ))
-      .orderBy(desc(tweets.createdAt))
-      .limit(20);
-
-    return c.json({ tweets: userTweets });
-  } catch (error) {
-    console.error('Error fetching user tweets:', error);
-    throw new HTTPException(500, { message: 'Failed to fetch user tweets' });
   }
 })
 
@@ -662,5 +607,110 @@ const app = new Hono<{
     throw new HTTPException(500, { message: 'Failed to toggle bookmark' });
   }
 })
+
+
+// GET /api/tweets/user/:id - Get user tweets
+.get('/user/:id', requireAuth, zValidator('param', userParamsSchema), async (c) => {
+  const currentUser = c.get('user');
+  const { id } = c.req.valid('param');
+
+  try {
+    const userTweets = await db
+      .select({
+        id: tweets.id,
+        content: tweets.content,
+        authorId: tweets.authorId,
+        parentTweetId: tweets.parentTweetId,
+        isRetweet: tweets.isRetweet,
+        originalTweetId: tweets.originalTweetId,
+        mediaItems: tweets.mediaItems,
+        likesCount: tweets.likesCount,
+        retweetsCount: tweets.retweetsCount,
+        repliesCount: tweets.repliesCount,
+        createdAt: tweets.createdAt,
+        updatedAt: tweets.updatedAt,
+        authorName: users.name,
+        authorUsername: users.username,
+        authorImage: users.image,
+        isLikedByUser: sql<boolean>`CASE WHEN ${likes.userId} IS NOT NULL THEN true ELSE false END`,
+        isRetweetedByUser: sql<boolean>`CASE WHEN ${retweets.userId} IS NOT NULL THEN true ELSE false END`,
+        isBookmarkedByUser: sql<boolean>`CASE WHEN ${bookmarks.userId} IS NOT NULL THEN true ELSE false END`,
+      })
+      .from(tweets)
+      .leftJoin(users, eq(tweets.authorId, users.id))
+      .leftJoin(likes, and(
+        eq(likes.tweetId, tweets.id),
+        eq(likes.userId, currentUser!.id)
+      ))
+      .leftJoin(retweets, and(
+        eq(retweets.tweetId, tweets.id),
+        eq(retweets.userId, currentUser!.id)
+      ))
+      .leftJoin(bookmarks, and(
+        eq(bookmarks.tweetId, tweets.id),
+        eq(bookmarks.userId, currentUser!.id)
+      ))
+      .where(and(
+        eq(tweets.authorId, id),
+        isNull(tweets.parentTweetId) // Only top-level tweets
+      ))
+      .orderBy(desc(tweets.createdAt))
+      .limit(20);
+
+    return c.json({ tweets: userTweets });
+  } catch (error) {
+    console.error('Error fetching user tweets:', error);
+    throw new HTTPException(500, { message: 'Failed to fetch user tweets' });
+  }
+})
+
+// GET /api/tweets/bookmarks - Get user bookmarks
+.get('/bookmarks', requireAuth, async (c) => {
+  const currentUser = c.get('user');
+  
+  try {
+    const bookmarkedTweets = await db
+      .select({
+        id: tweets.id,
+        content: tweets.content,
+        authorId: tweets.authorId,
+        parentTweetId: tweets.parentTweetId,
+        isRetweet: tweets.isRetweet,
+        originalTweetId: tweets.originalTweetId,
+        mediaItems: tweets.mediaItems,
+        likesCount: tweets.likesCount,
+        retweetsCount: tweets.retweetsCount,
+        repliesCount: tweets.repliesCount,
+        createdAt: tweets.createdAt,
+        updatedAt: tweets.updatedAt,
+        authorName: users.name,
+        authorUsername: users.username,
+        authorImage: users.image,
+        isLikedByUser: sql<boolean>`CASE WHEN ${likes.userId} IS NOT NULL THEN true ELSE false END`,
+        isRetweetedByUser: sql<boolean>`CASE WHEN ${retweets.userId} IS NOT NULL THEN true ELSE false END`,
+        isBookmarkedByUser: sql<boolean>`true`, // Always true since we're filtering by bookmarks,
+      })
+      .from(bookmarks)
+      .innerJoin(tweets, eq(bookmarks.tweetId, tweets.id))
+      .leftJoin(users, eq(tweets.authorId, users.id))
+      .leftJoin(likes, and(
+        eq(likes.tweetId, tweets.id),
+        eq(likes.userId, currentUser!.id)
+      ))
+      .leftJoin(retweets, and(
+        eq(retweets.tweetId, tweets.id),
+        eq(retweets.userId, currentUser!.id)
+      ))
+      .where(eq(bookmarks.userId, currentUser!.id))
+      .orderBy(desc(bookmarks.createdAt))
+      .limit(50);
+
+    return c.json({ tweets: bookmarkedTweets });
+  } catch (error) {
+    console.error('Error fetching bookmarks:', error);
+    throw new HTTPException(500, { message: 'Failed to fetch bookmarks' });
+  }
+})
+
 
 export { app as tweetsRoute }; 
