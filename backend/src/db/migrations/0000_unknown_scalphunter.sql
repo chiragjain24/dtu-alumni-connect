@@ -84,6 +84,7 @@ CREATE TABLE "tweets" (
 	"parent_tweet_id" text,
 	"is_retweet" boolean NOT NULL,
 	"original_tweet_id" text,
+	"media_items" jsonb,
 	"likes_count" integer NOT NULL,
 	"retweets_count" integer NOT NULL,
 	"replies_count" integer NOT NULL,

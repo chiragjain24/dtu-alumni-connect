@@ -1,5 +1,5 @@
 {
-  "id": "dc3480a5-fad0-4a13-b26c-46538927adfe",
+  "id": "92e55156-1752-44db-a9b1-87b81273cb10",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -594,6 +594,12 @@
         "original_tweet_id": {
           "name": "original_tweet_id",
           "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "media_items": {
+          "name": "media_items",
+          "type": "jsonb",
           "primaryKey": false,
           "notNull": false
         },
