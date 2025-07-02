@@ -2,10 +2,10 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useEffect, useRef } from 'react'
 import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { TweetCard } from '@/components/tweets/tweet-card'
 import { TweetDetailCard } from '@/components/tweets/tweet-detail-card'
 import { TweetThreadCard } from '@/components/tweets/tweet-thread-card'
 import { TweetComposer } from '@/components/tweets/tweet-composer'
+import { TweetReplyThread } from '@/components/tweets/tweet-reply-thread'
 import { useTweet, useCreateTweet } from '@/lib/queries/tweets'
 import { useSession } from '@/lib/auth-client'
 import Loader from '@/components/loader'
@@ -142,14 +142,15 @@ export default function TweetDetail() {
         </div>
       )}
 
-      {/* Replies */}
+      {/* Replies with Threading */}
       <div>
         {replies.length > 0 ? (
           <div>
             {replies.map((reply) => (
-              <TweetCard 
+              <TweetReplyThread 
                 key={reply.id} 
-                tweet={reply}
+                reply={reply}
+                level={0}
               />
             ))}
           </div>

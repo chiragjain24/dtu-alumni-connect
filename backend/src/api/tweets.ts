@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { db } from '../db';
 import { tweets, likes, retweets, bookmarks } from '../db/schema/tweets';
 import { user as users } from '../db/schema/auth';
-import { eq, desc, and, sql, isNull, inArray } from 'drizzle-orm';
+import { eq, desc, and, sql, isNull } from 'drizzle-orm';
 import { HTTPException } from 'hono/http-exception';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
