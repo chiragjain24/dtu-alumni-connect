@@ -24,5 +24,12 @@ export interface Tweet {
     authorImage: string | null;
     isLikedByUser?: boolean;
     isRetweetedByUser?: boolean;
+    isBookmarkedByUser?: boolean;
     replies?: Tweet[]; // For nested thread structure
+}
+
+// Extended Tweet type for internal processing during tree traversal
+export interface TweetWithTreeMetadata extends Tweet {
+    nodeType: 'target' | 'parent' | 'reply' | 'unknown';
+    treeLevel: number;
 }

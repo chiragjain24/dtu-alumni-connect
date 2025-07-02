@@ -6,7 +6,7 @@ import { eq, desc, and, sql, isNull } from 'drizzle-orm';
 import { HTTPException } from 'hono/http-exception';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
-import { type Tweet } from '../types/types';
+import { type Tweet, type TweetWithTreeMetadata } from '../types/types';
 import { deleteUploadThingFiles } from '../lib/uploadthing-utils';
 
 // Validation schemas
@@ -167,178 +167,156 @@ const app = new Hono<{
   }
 })
 
-// GET /api/tweets/tweet/:id - Get single tweet
+// GET /api/tweets/tweet/:id - Get single tweet (OPTIMIZED - Single DB Query)
 .get('/tweet/:id', requireAuth, zValidator('param', tweetParamsSchema), async (c) => {
   const currentUser = c.get('user');
   const { id } = c.req.valid('param');
 
   try {
-    const [[tweet], parentTweets, allReplies] = await Promise.all([
-      // Query 1: Get main tweet with user interaction status
-      db
-        .select({
-          id: tweets.id,
-          content: tweets.content,
-          authorId: tweets.authorId,
-          parentTweetId: tweets.parentTweetId,
-          isRetweet: tweets.isRetweet,
-          originalTweetId: tweets.originalTweetId,
-          mediaItems: tweets.mediaItems,
-          likesCount: tweets.likesCount,
-          retweetsCount: tweets.retweetsCount,
-          repliesCount: tweets.repliesCount,
-          createdAt: tweets.createdAt,
-          updatedAt: tweets.updatedAt,
-          authorName: users.name,
-          authorUsername: users.username,
-          authorImage: users.image,
-          isLikedByUser: sql<boolean>`CASE WHEN ${likes.userId} IS NOT NULL THEN true ELSE false END`,
-          isRetweetedByUser: sql<boolean>`CASE WHEN ${retweets.userId} IS NOT NULL THEN true ELSE false END`,
-          isBookmarkedByUser: sql<boolean>`CASE WHEN ${bookmarks.userId} IS NOT NULL THEN true ELSE false END`,
-        })
-        .from(tweets)
-        .leftJoin(users, eq(tweets.authorId, users.id))
-        .leftJoin(likes, and(
-          eq(likes.tweetId, tweets.id),
-          eq(likes.userId, currentUser!.id)
-        ))
-        .leftJoin(retweets, and(
-          eq(retweets.tweetId, tweets.id),
-          eq(retweets.userId, currentUser!.id)
-        ))
-        .leftJoin(bookmarks, and(
-          eq(bookmarks.tweetId, tweets.id),
-          eq(bookmarks.userId, currentUser!.id)
-        ))
-        .where(eq(tweets.id, id))
-        .limit(1),
+    // Single comprehensive query that gets target tweet, all parents, and all replies
+    const allTweets: TweetWithTreeMetadata[] = await db
+      .select({
+        id: tweets.id,
+        content: tweets.content,
+        authorId: tweets.authorId,
+        parentTweetId: tweets.parentTweetId,
+        isRetweet: tweets.isRetweet,
+        originalTweetId: tweets.originalTweetId,
+        mediaItems: tweets.mediaItems,
+        likesCount: tweets.likesCount,
+        retweetsCount: tweets.retweetsCount,
+        repliesCount: tweets.repliesCount,
+        createdAt: tweets.createdAt,
+        updatedAt: tweets.updatedAt,
+        authorName: users.name,
+        authorUsername: users.username,
+        authorImage: users.image,
+        isLikedByUser: sql<boolean>`CASE WHEN ${likes.userId} IS NOT NULL THEN true ELSE false END`,
+        isRetweetedByUser: sql<boolean>`CASE WHEN ${retweets.userId} IS NOT NULL THEN true ELSE false END`,
+        isBookmarkedByUser: sql<boolean>`CASE WHEN ${bookmarks.userId} IS NOT NULL THEN true ELSE false END`,
+        // Add metadata to distinguish tweet types
+        nodeType: sql<'target' | 'parent' | 'reply' | 'unknown'>`
+          CASE 
+            WHEN tweets.id = ${id} THEN 'target'
+            WHEN tweet_tree.direction = 'parent' THEN 'parent'
+            WHEN tweet_tree.direction = 'reply' THEN 'reply'
+            ELSE 'unknown'
+          END
+        `,
+        treeLevel: sql<number>`COALESCE(tweet_tree.level, 0)`,
+      })
+             .from(sql`
+         (
+           WITH RECURSIVE 
+           -- Get parent tweets by walking up the chain
+           parent_tree AS (
+             SELECT parent_tweet_id as id, 1 as level
+             FROM tweets 
+             WHERE id = ${id} AND parent_tweet_id IS NOT NULL
+             
+             UNION ALL
+             
+             SELECT t.parent_tweet_id as id, pt.level + 1 as level
+             FROM tweets t
+             INNER JOIN parent_tree pt ON t.id = pt.id
+             WHERE t.parent_tweet_id IS NOT NULL AND pt.level < 10
+           ),
+           -- Get reply tweets by walking down the chain
+           reply_tree AS (
+             SELECT id, 1 as level
+             FROM tweets 
+             WHERE parent_tweet_id = ${id}
+             
+             UNION ALL
+             
+             SELECT t.id, rt.level + 1 as level
+             FROM tweets t
+             INNER JOIN reply_tree rt ON t.parent_tweet_id = rt.id
+             WHERE rt.level < 10
+           ),
+           -- Combine all tweet IDs with their types
+           tweet_tree AS (
+             -- Target tweet
+             SELECT ${id} as id, 'target' as direction, 0 as level
+             
+             UNION ALL
+             
+             -- Parent tweets
+             SELECT id, 'parent' as direction, level
+             FROM parent_tree
+             
+             UNION ALL
+             
+             -- Reply tweets
+             SELECT id, 'reply' as direction, level
+             FROM reply_tree
+           )
+           SELECT * FROM tweet_tree
+         ) AS tweet_tree
+       `)
+      .innerJoin(tweets, eq(sql`tweet_tree.id`, tweets.id))
+      .leftJoin(users, eq(tweets.authorId, users.id))
+      .leftJoin(likes, and(
+        eq(likes.tweetId, tweets.id),
+        eq(likes.userId, currentUser!.id)
+      ))
+      .leftJoin(retweets, and(
+        eq(retweets.tweetId, tweets.id),
+        eq(retweets.userId, currentUser!.id)
+      ))
+      .leftJoin(bookmarks, and(
+        eq(bookmarks.tweetId, tweets.id),
+        eq(bookmarks.userId, currentUser!.id)
+      ))
+      .orderBy(
+        // Sort by direction first (parents, target, replies)
+        sql`CASE 
+          WHEN tweet_tree.direction = 'parent' THEN 1 
+          WHEN tweet_tree.direction = 'target' THEN 2 
+          WHEN tweet_tree.direction = 'reply' THEN 3 
+        END`,
+        // Then sort parents chronologically (oldest first)
+        sql`CASE 
+          WHEN tweet_tree.direction = 'parent' THEN ${tweets.createdAt} 
+        END ASC`,
+        // Sort replies reverse chronologically (newest first)  
+        sql`CASE 
+          WHEN tweet_tree.direction = 'reply' THEN ${tweets.createdAt} 
+        END DESC`
+      );
 
-      // Query 2: Get parent tweets in the thread
-      db
-        .select({
-          id: tweets.id,
-          content: tweets.content,
-          authorId: tweets.authorId,
-          parentTweetId: tweets.parentTweetId,
-          isRetweet: tweets.isRetweet,
-          originalTweetId: tweets.originalTweetId,
-          mediaItems: tweets.mediaItems,
-          likesCount: tweets.likesCount,
-          retweetsCount: tweets.retweetsCount,
-          repliesCount: tweets.repliesCount,
-          createdAt: tweets.createdAt,
-          updatedAt: tweets.updatedAt,
-          authorName: users.name,
-          authorUsername: users.username,
-          authorImage: users.image,
-          isLikedByUser: sql<boolean>`CASE WHEN ${likes.userId} IS NOT NULL THEN true ELSE false END`,
-          isRetweetedByUser: sql<boolean>`CASE WHEN ${retweets.userId} IS NOT NULL THEN true ELSE false END`,
-          isBookmarkedByUser: sql<boolean>`CASE WHEN ${bookmarks.userId} IS NOT NULL THEN true ELSE false END`,
-        })
-        .from(tweets)
-        .leftJoin(users, eq(tweets.authorId, users.id))
-        .leftJoin(likes, and(
-          eq(likes.tweetId, tweets.id),
-          eq(likes.userId, currentUser!.id)
-        ))
-        .leftJoin(retweets, and(
-          eq(retweets.tweetId, tweets.id),
-          eq(retweets.userId, currentUser!.id)
-        ))
-        .leftJoin(bookmarks, and(
-          eq(bookmarks.tweetId, tweets.id),
-          eq(bookmarks.userId, currentUser!.id)
-        ))
-        .where(sql`
-          tweets.id IN (
-            WITH RECURSIVE parent_tree AS (
-              -- Base case: Start with the direct parent of the current tweet
-              SELECT parent_tweet_id as id, 1 as level
-              FROM tweets 
-              WHERE tweets.id = ${id} AND parent_tweet_id IS NOT NULL
-              
-              UNION ALL
-              
-              -- Recursive case: For each parent found, get its parent
-              -- This continues until we reach the root tweet (no parent) or max depth i.e 10
-              SELECT t.parent_tweet_id as id, pt.level + 1 as level
-              FROM tweets t
-              INNER JOIN parent_tree pt ON t.id = pt.id
-              WHERE t.parent_tweet_id IS NOT NULL AND pt.level < 10
-            )
-            SELECT id FROM parent_tree
-          )
-        `)
-        .orderBy(tweets.createdAt), // Chronological order (oldest first)
-
-      // Query 3: Get ALL replies in the thread (not just direct replies)
-      db
-        .select({
-          id: tweets.id,
-          content: tweets.content,
-          authorId: tweets.authorId,
-          parentTweetId: tweets.parentTweetId,
-          isRetweet: tweets.isRetweet,
-          originalTweetId: tweets.originalTweetId,
-          mediaItems: tweets.mediaItems,
-          likesCount: tweets.likesCount,
-          retweetsCount: tweets.retweetsCount,
-          repliesCount: tweets.repliesCount,
-          createdAt: tweets.createdAt,
-          updatedAt: tweets.updatedAt,
-          authorName: users.name,
-          authorUsername: users.username,
-          authorImage: users.image,
-          isLikedByUser: sql<boolean>`CASE WHEN ${likes.userId} IS NOT NULL THEN true ELSE false END`,
-          isRetweetedByUser: sql<boolean>`CASE WHEN ${retweets.userId} IS NOT NULL THEN true ELSE false END`,
-          isBookmarkedByUser: sql<boolean>`CASE WHEN ${bookmarks.userId} IS NOT NULL THEN true ELSE false END`,
-        })
-        .from(tweets)
-        .leftJoin(users, eq(tweets.authorId, users.id))
-        .leftJoin(likes, and(
-          eq(likes.tweetId, tweets.id),
-          eq(likes.userId, currentUser!.id)
-        ))
-        .leftJoin(retweets, and(
-          eq(retweets.tweetId, tweets.id),
-          eq(retweets.userId, currentUser!.id)
-        ))
-        .leftJoin(bookmarks, and(
-          eq(bookmarks.tweetId, tweets.id),
-          eq(bookmarks.userId, currentUser!.id)
-        ))
-        .where(sql`
-          parent_tweet_id IS NOT NULL AND (
-            parent_tweet_id = ${id} OR
-            EXISTS (
-              WITH RECURSIVE reply_tree AS (
-                SELECT id, parent_tweet_id, 1 as level FROM tweets WHERE parent_tweet_id = ${id}
-                UNION ALL
-                SELECT t.id, t.parent_tweet_id, rt.level + 1 as level
-                FROM tweets t
-                INNER JOIN reply_tree rt ON t.parent_tweet_id = rt.id
-                WHERE rt.level < 10
-              )
-              SELECT 1 FROM reply_tree WHERE reply_tree.id = tweets.id
-            )
-          )
-        `)
-        .orderBy(desc(tweets.createdAt)) // Chronological order for threading
-    ]);
-
-    if (!tweet) {
+    if (allTweets.length === 0) {
       throw new HTTPException(404, { message: 'Tweet not found' });
     }
 
-    // Helper Recursive function to build nested tweet threads
-    const buildNestedReplies = (allReplies: Tweet[], parentId: string): Tweet[]=>{
+    // Separate tweets by type
+    const targetTweet = allTweets.find(t => t.nodeType === 'target');
+    const parentTweetsRaw = allTweets.filter(t => t.nodeType === 'parent');
+    const allReplies = allTweets.filter(t => t.nodeType === 'reply');
+
+    if (!targetTweet) {
+      throw new HTTPException(404, { message: 'Tweet not found' });
+    }
+
+    // Clean up metadata fields from the results
+    const { nodeType: _, treeLevel: __, ...tweet } = targetTweet;
+    const parentTweets = parentTweetsRaw.map(({ nodeType, treeLevel, ...tweetData }) => tweetData);
+
+    // Helper recursive function to build nested tweet threads
+    const buildNestedReplies = (allReplies: TweetWithTreeMetadata[], parentId: string): Tweet[] => {
       const directReplies = allReplies.filter(reply => reply.parentTweetId === parentId);
       
-      return directReplies.map(reply => ({
-        ...reply,
-        replies: buildNestedReplies(allReplies, reply.id)
-      }));
-    }
+      return directReplies
+        .map(reply => {
+          // Remove metadata fields when building the final structure
+          const { nodeType, treeLevel, ...tweetData } = reply;
+          return {
+            ...tweetData,
+            replies: buildNestedReplies(allReplies, reply.id)
+          };
+        });
+    };
+
     // Build nested structure - only direct replies to the main tweet
     const nestedReplies = buildNestedReplies(allReplies, id);
 
