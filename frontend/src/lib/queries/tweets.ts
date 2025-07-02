@@ -154,8 +154,9 @@ export function useTimeline() {
       return data.tweets;
     },
     refetchOnWindowFocus: false,
+    refetchOnMount: 'always',
     refetchInterval: 300000, // 5 minutes
-    staleTime: 30000, // 30 seconds
+    staleTime: 0,
   });
 }
 
@@ -177,8 +178,9 @@ export function useTweet(id: string) {
     },
     enabled: !!id,
     refetchOnWindowFocus: false,
-    refetchInterval: 30000, // 30 seconds
-    staleTime: 10000, // 10 seconds
+    refetchOnMount: 'always',
+    refetchInterval: 20000, // 20 seconds
+    staleTime: 0,
     retry: (failureCount, error) => {
       if (error instanceof Error && error.cause === 404) {
         return false
