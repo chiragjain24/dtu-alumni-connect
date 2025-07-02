@@ -207,6 +207,25 @@ export function useUserTweets(userId: string) {
   });
 }
 
+// User liked tweets query
+export function useUserLikedTweets(userId: string, enabled: boolean = true) {
+  return useQuery({
+    queryKey: ['tweets', 'user', 'likes', userId],
+    queryFn: async () => {
+      const response = await api.tweets.user[':id'].likes.$get({ param: { id: userId } });
+      if (!response.ok) {
+        throw new Error('Failed to fetch user liked tweets');
+      }
+      const data = await response.json();
+      return data.tweets;
+    },
+    enabled: !!userId && enabled,
+    refetchOnWindowFocus: false,
+    refetchInterval: 300000, // 5 minutes
+    staleTime: 10000, // 10 seconds
+  });
+}
+
 // Bookmarked tweets query
 export function useBookmarkedTweets() {
   return useQuery({
@@ -368,6 +387,9 @@ export function useLikeTweet() {
       
       // Optimistically update cache
       return updateTweetAcrossAllCaches(queryClient, tweet.id, createLikeUpdater(isLike));
+    },
+    onSuccess: (_, {tweet}) => {
+      queryClient.invalidateQueries({ queryKey: ['tweets', 'user', 'likes', tweet.authorId] });
     },
     onError: (_, __, context) => {
       // Rollback on error

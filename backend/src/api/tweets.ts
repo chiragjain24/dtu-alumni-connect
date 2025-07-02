@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { db } from '../db';
 import { tweets, likes, retweets, bookmarks } from '../db/schema/tweets';
 import { user as users } from '../db/schema/auth';
-import { eq, desc, and, sql, isNull } from 'drizzle-orm';
+import { eq, desc, and, sql, isNull, inArray } from 'drizzle-orm';
 import { HTTPException } from 'hono/http-exception';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
@@ -661,6 +661,59 @@ const app = new Hono<{
   } catch (error) {
     console.error('Error fetching user tweets:', error);
     throw new HTTPException(500, { message: 'Failed to fetch user tweets' });
+  }
+})
+
+// GET /api/tweets/user/:id/likes - Get user's liked tweets
+.get('/user/:id/likes', requireAuth, zValidator('param', userParamsSchema), async (c) => {
+  const currentUser = c.get('user');
+  const { id } = c.req.valid('param');
+
+  try {
+    const likedTweets = await db
+      .select({
+        id: tweets.id,
+        content: tweets.content,
+        authorId: tweets.authorId,
+        parentTweetId: tweets.parentTweetId,
+        isRetweet: tweets.isRetweet,
+        originalTweetId: tweets.originalTweetId,
+        mediaItems: tweets.mediaItems,
+        likesCount: tweets.likesCount,
+        retweetsCount: tweets.retweetsCount,
+        repliesCount: tweets.repliesCount,
+        createdAt: tweets.createdAt,
+        updatedAt: tweets.updatedAt,
+        authorName: users.name,
+        authorUsername: users.username,
+        authorImage: users.image,
+        isLikedByUser: sql<boolean>`CASE WHEN current_user_likes.user_id IS NOT NULL THEN true ELSE false END`,
+        isRetweetedByUser: sql<boolean>`CASE WHEN ${retweets.userId} IS NOT NULL THEN true ELSE false END`,
+        isBookmarkedByUser: sql<boolean>`CASE WHEN ${bookmarks.userId} IS NOT NULL THEN true ELSE false END`,
+      })
+      .from(likes)
+      .innerJoin(tweets, eq(likes.tweetId, tweets.id))
+      .leftJoin(users, eq(tweets.authorId, users.id))
+      .leftJoin(
+        sql`(SELECT user_id, tweet_id FROM likes WHERE user_id = ${currentUser!.id}) AS current_user_likes`, // temporary table
+        sql`current_user_likes.tweet_id = ${tweets.id}`
+      )
+      .leftJoin(retweets, and(
+        eq(retweets.tweetId, tweets.id),
+        eq(retweets.userId, currentUser!.id)
+      ))
+      .leftJoin(bookmarks, and(
+        eq(bookmarks.tweetId, tweets.id),
+        eq(bookmarks.userId, currentUser!.id)
+      ))
+      .where(eq(likes.userId, id))
+      .orderBy(desc(likes.createdAt))
+      .limit(50);
+
+    return c.json({ tweets: likedTweets });
+  } catch (error) {
+    console.error('Error fetching user likes:', error);
+    throw new HTTPException(500, { message: 'Failed to fetch user likes' });
   }
 })
 

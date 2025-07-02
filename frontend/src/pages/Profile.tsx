@@ -6,7 +6,7 @@ import { Avatar } from '../components/ui/avatar'
 import { Card, CardContent } from '../components/ui/card'
 import useGetMyProfile from '@/lib/queries'
 import { useGetUserProfile } from '@/lib/queries/users'
-import { useUserTweets } from '@/lib/queries/tweets'
+import { useUserTweets, useUserLikedTweets } from '@/lib/queries/tweets'
 import { TweetCard } from '@/components/tweets/tweet-card'
 import Loader from '@/components/loader'
 
@@ -23,8 +23,10 @@ export default function Profile() {
   const profile = isMyProfile ? myProfile : userProfile
   const isPending = isMyProfile ? myProfilePending : userProfilePending
 
-  // Get user tweets
+  // Get user tweets and liked tweets (only when needed)
   const { data: userTweets, isPending: tweetsLoading } = useUserTweets(profile?.user.id || '')
+  const { data: userLikedTweets, isPending: likedTweetsLoading } = useUserLikedTweets(
+    profile?.user.id || '', activeTab === 'likes')
 
 
   if (isPending) return <Loader />
@@ -264,21 +266,38 @@ export default function Profile() {
         )}
 
         {activeTab === 'likes' && (
-          <Card className="shadow-none border-none">
-            <CardContent className="p-8 text-center">
-              <div className="space-y-4">
-                <div className="w-16 h-16 mx-auto bg-muted rounded-full flex items-center justify-center">
-                  <Users className="w-8 h-8 text-muted-foreground" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold mb-2">No likes yet</h3>
-                  <p className="text-muted-foreground">
-                    When you like tweets, they'll show up here.
-                  </p>
-                </div>
+          <div>
+            {likedTweetsLoading ? (
+              <div className="p-8 text-center">
+                <Loader />
               </div>
-            </CardContent>
-          </Card>
+            ) : userLikedTweets && userLikedTweets.length > 0 ? (
+              <div>
+                {userLikedTweets.map((tweet) => (
+                  <TweetCard 
+                    key={tweet.id} 
+                    tweet={tweet}
+                  />
+                ))}
+              </div>
+            ) : (
+              <Card className="shadow-none border-none">
+                <CardContent className="p-8 text-center">
+                  <div className="space-y-4">
+                    <div className="w-16 h-16 mx-auto bg-muted rounded-full flex items-center justify-center">
+                      <Users className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-semibold mb-2">No likes yet</h3>
+                      <p className="text-muted-foreground">
+                        {isMyProfile ? "When you like tweets, they'll show up here." : `@${username} hasn't liked any tweets yet.`}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         )}
       </div>
     </div>
