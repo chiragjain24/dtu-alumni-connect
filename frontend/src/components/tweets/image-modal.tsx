@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { X, ChevronLeft, ChevronRight, Download, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
@@ -92,9 +93,12 @@ export function ImageModal({ images, initialIndex, isOpen, onClose }: ImageModal
 
   if (!isOpen) return null;
 
-  return (
+  // Get the portal target, fallback to body
+  const portalTarget = document.getElementById('modal-root') || document.body;
+
+  return createPortal(
     <div
-      className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 bg-black/90 z-[9999] flex items-center justify-center p-4"
       data-action="prevent"
       onClick={handleBackdropClick}
     >
@@ -165,11 +169,11 @@ export function ImageModal({ images, initialIndex, isOpen, onClose }: ImageModal
       )}
 
       {/* Image */}
-      <div className="max-w-full max-h-full flex items-center justify-center">
+      <div className="flex items-center justify-center w-full h-full">
         <img
           src={images[currentIndex]}
           alt={`Image ${currentIndex + 1}`}
-          className="max-w-full max-h-full object-contain rounded-lg"
+          className="max-w-[calc(100vw-2rem)] max-h-[calc(100vh-2rem)] object-contain rounded-lg"
           onError={(e) => {
             toast.error('Failed to load image');
             console.error('Image load error:', e);
@@ -192,6 +196,7 @@ export function ImageModal({ images, initialIndex, isOpen, onClose }: ImageModal
           ))}
         </div>
       )}
-    </div>
+    </div>,
+    portalTarget
   );
 } 
