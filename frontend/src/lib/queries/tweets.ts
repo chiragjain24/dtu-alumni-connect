@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { api } from '@/lib/utils';
 import type { Tweet, MediaItem } from '@/types/types';
 
@@ -53,8 +53,30 @@ function updateTweetAcrossAllCaches(
     
     let updatedData;
     
-    // Handle Array of Tweets
-    if (Array.isArray(currentData)) {
+    // Handle Infinite Query (timeline)
+    if (currentData.pages && Array.isArray(currentData.pages)) {
+      updatedData = {
+        ...currentData,
+        pages: currentData.pages.map((page: any) => ({
+          ...page,
+          tweets: page.tweets.map((tweet: Tweet) => {
+            if (tweet.id === tweetId) {
+              return updater(tweet);
+            }
+            // Handle nested replies recursively
+            if (tweet.replies && tweet.replies.length > 0) {
+              return {
+                ...tweet,
+                replies: updateNestedReplies(tweet.replies)
+              };
+            }
+            return tweet;
+          })
+        }))
+      };
+    }
+    // Handle Array of Tweets (legacy)
+    else if (Array.isArray(currentData)) {
       updatedData = currentData.map(tweet => {
           if (tweet.id === tweetId) {
             return updater(tweet);
@@ -68,7 +90,6 @@ function updateTweetAcrossAllCaches(
           }
           return tweet;
       });
-
     } 
     // Tweet + parentTweets + replies
     else if(currentData.tweet && currentData.parentTweets && currentData.replies) {
@@ -141,22 +162,26 @@ function createBookmarkUpdater(isBookmarked: boolean) {
   });
 }
 
-// Timeline tweets query
+// Timeline tweets query with infinite scroll
 export function useTimeline() {
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: ['tweets', 'timeline'],
-    queryFn: async () => {
-      const response = await api.tweets.timeline.$get();
+    queryFn: async ({ pageParam }: { pageParam?: string }) => {
+      const response = await api.tweets.timeline.$get({
+        query: { limit: '30' , cursor: pageParam }
+      });
+      
       if (!response.ok) {
         throw new Error('Failed to fetch timeline');
       }
-      const data = await response.json();
-      return data.tweets;
+      
+      return response.json();
     },
+    getNextPageParam: (lastPage: { nextCursor: string | null; hasMore: boolean; tweets: Tweet[] }) => lastPage.nextCursor,
+    initialPageParam: undefined,
     refetchOnWindowFocus: false,
-    refetchOnMount: 'always',
     refetchInterval: 300000, // 5 minutes
-    staleTime: 0,
+    staleTime: 60000, // 1 minute
   });
 }
 
@@ -312,8 +337,19 @@ export function useDeleteTweet() {
         previousData[keyString] = currentData;
         cacheKeys.push(queryKey);
         
-        // Handle Array of Tweets
-        if (Array.isArray(currentData)) {
+        // Handle Infinite Query (timeline)
+        if (currentData.pages && Array.isArray(currentData.pages)) {
+          const updatedData = {
+            ...currentData,
+            pages: currentData.pages.map((page: any) => ({
+              ...page,
+              tweets: page.tweets.filter((t: Tweet) => t.id !== tweet.id)
+            }))
+          };
+          queryClient.setQueryData(queryKey, updatedData);
+        }
+        // Handle Array of Tweets (legacy)
+        else if (Array.isArray(currentData)) {
           const filteredData = currentData.filter((t: Tweet) => t.id !== tweet.id);
           queryClient.setQueryData(queryKey, filteredData);
         }

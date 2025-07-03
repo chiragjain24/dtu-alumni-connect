@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { db } from '../db';
 import { tweets, likes, retweets, bookmarks } from '../db/schema/tweets';
 import { user as users } from '../db/schema/auth';
-import { eq, desc, and, sql, isNull } from 'drizzle-orm';
+import { eq, desc, and, sql, isNull, lt } from 'drizzle-orm';
 import { HTTPException } from 'hono/http-exception';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
@@ -32,6 +32,16 @@ const userParamsSchema = z.object({
   id: z.string(),
 });
 
+const timelineQuerySchema = z.object({
+  cursor: z.string().optional(),
+  limit: z.string().refine((val) => {
+    const num = parseInt(val, 10);
+    return !isNaN(num) && num >= 5 && num <= 50;
+  }, {
+    message: "Limit must be a number between 5 and 50"
+  }),
+});
+
 // Middleware to require authentication
 const requireAuth = async (c: any, next: any) => {
   const currentUser = c.get('user');
@@ -48,11 +58,21 @@ const app = new Hono<{
     }
   }>()
 
-// GET /api/tweets/timeline - Get timeline tweets
-.get('/timeline', requireAuth, async (c) => {
+// GET /api/tweets/timeline - Get timeline tweets with cursor-based pagination
+.get('/timeline', requireAuth, zValidator('query', timelineQuerySchema), async (c) => {
   const currentUser = c.get('user');
+  const { cursor, limit } = c.req.valid('query');
+  const safeLimit = parseInt(limit, 10);
   
   try {
+    // Build where conditions
+    const whereConditions = cursor
+      ? and(
+          isNull(tweets.parentTweetId),
+          lt(tweets.createdAt, new Date(cursor))
+        )
+      : isNull(tweets.parentTweetId);
+
     const timelineTweets = await db
       .select({
         id: tweets.id,
@@ -89,11 +109,26 @@ const app = new Hono<{
         eq(bookmarks.tweetId, tweets.id),
         eq(bookmarks.userId, currentUser!.id)
       ))
-      .where(isNull(tweets.parentTweetId)) // Only top-level tweets
+      .where(whereConditions)
       .orderBy(desc(tweets.createdAt))
-      .limit(100);
+      .limit(safeLimit + 1); // Fetch one extra to determine if there are more
 
-    return c.json({ tweets: timelineTweets });
+    // Check if there are more tweets
+    const hasMore = timelineTweets.length > safeLimit;
+    const tweets_data = hasMore ? timelineTweets.slice(0, safeLimit) : timelineTweets;
+    
+    // Get the next cursor (last tweet's createdAt) - only if we have tweets AND there are more
+    let nextCursor = null;
+    if (tweets_data.length > 0 && hasMore) {
+      // Use the last tweet's timestamp as cursor
+      nextCursor = tweets_data[tweets_data.length - 1].createdAt.toISOString();
+    }
+
+    return c.json({ 
+      tweets: tweets_data,
+      nextCursor,
+      hasMore
+    });
   } catch (error) {
     console.error('Error fetching timeline:', error);
     throw new HTTPException(500, { message: 'Failed to fetch timeline' });
