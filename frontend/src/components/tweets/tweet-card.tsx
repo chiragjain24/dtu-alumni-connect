@@ -17,6 +17,7 @@ import { TweetMedia } from './tweet-media'
 import { DeleteTweetDialog } from './delete-tweet-dialog'
 import { Link } from 'react-router-dom'
 import { formatTimeAgo } from '@/lib/utils'
+import { TextContent } from '@/components/tweets/text-content'
 
 interface TweetCardProps {
   tweet: Tweet
@@ -166,7 +167,9 @@ export function TweetCard({
           </div>
           
           <div className="mt-1">
-            <p className="text-foreground whitespace-pre-wrap">{tweet.content}</p>
+            <p className="text-foreground whitespace-pre-wrap">
+              <TextContent text={tweet.content} />
+            </p>
             <TweetMedia mediaItems={tweet.mediaItems || []} />
           </div>
 

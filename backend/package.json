@@ -2,7 +2,7 @@
   "name": "backend",
   "scripts": {
     "dev": "bun run --hot src/index.ts",
-    "build": "bun build src/index.ts --outdir dist --target bun",
+    "build": "bun build src/index.ts --outdir dist --target bun --minify",
     "build:worker": "bun build src/index.ts --outdir dist --target browser --format esm --minify",
     "start": "bun run dist/index.js",
     "deploy": "wrangler deploy",

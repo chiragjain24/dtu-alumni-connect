@@ -16,6 +16,7 @@ import { toast } from 'sonner'
 import { TweetMedia } from './tweet-media'
 import { DeleteTweetDialog } from './delete-tweet-dialog'
 import { formatTimeAgo } from '@/lib/utils'
+import { TextContent } from '@/components/tweets/text-content'
 
 interface TweetReplyCardProps {
   tweet: Tweet
@@ -178,7 +179,9 @@ export function TweetReplyCard({
           </div>
           
           <div className="mt-1">
-            <p className="text-foreground whitespace-pre-wrap">{tweet.content}</p>
+            <p className="text-foreground whitespace-pre-wrap">
+              <TextContent text={tweet.content} />
+            </p>
             <TweetMedia mediaItems={tweet.mediaItems || []} />
           </div>
 

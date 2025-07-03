@@ -15,6 +15,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { TweetMedia } from './tweet-media'
 import { toast } from 'sonner'
 import { DeleteTweetDialog } from './delete-tweet-dialog'
+import { TextContent } from '@/components/tweets/text-content'
 
 interface TweetDetailCardProps {
   tweet: Tweet
@@ -178,7 +179,9 @@ export function TweetDetailCard({
       
       {/* Tweet Content - Larger text for detail view */}
       <div className="mb-4">
-        <p className="text-foreground text-lg leading-relaxed whitespace-pre-wrap">{tweet.content}</p>
+        <p className="text-foreground text-lg leading-relaxed whitespace-pre-wrap">
+          <TextContent text={tweet.content} />
+        </p>
         <TweetMedia mediaItems={tweet.mediaItems || []} />
       </div>
 
