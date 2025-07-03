@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { User, Shield, Bell, Palette, LogOut, Save, ArrowLeft } from 'lucide-react'
@@ -39,7 +39,24 @@ export default function Settings() {
   const { data: profile, isPending } = useGetMyProfile()
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile')
   
-  const [formData, setFormData] = useState({
+  // Use profile data directly with fallbacks - no local state needed
+  const currentFormData = {
+    username: profile?.user.username || '',
+    bio: profile?.user.bio || '',
+    graduationYear: profile?.user.graduationYear?.toString() || '',
+    branch: profile?.user.branch || '',
+    currentCompany: profile?.user.currentCompany || '',
+    currentRole: profile?.user.currentRole || '',
+    linkedinUrl: profile?.user.linkedinUrl || ''
+  }
+
+  const [formData, setFormData] = useState(currentFormData)
+
+  // Sync form data when profile changes, but only if form hasn't been modified
+  const [hasUserModified, setHasUserModified] = useState(false)
+  
+  // Update form data when profile loads, but only if user hasn't started editing
+  if (profile && !hasUserModified && JSON.stringify(formData) === JSON.stringify({
     username: '',
     bio: '',
     graduationYear: '',
@@ -47,7 +64,9 @@ export default function Settings() {
     currentCompany: '',
     currentRole: '',
     linkedinUrl: ''
-  })
+  })) {
+    setFormData(currentFormData)
+  }
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
@@ -64,7 +83,7 @@ export default function Settings() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-profile'] })
-      // Show success message or toast here
+      setHasUserModified(false) // Reset modification flag after successful save
       toast.success('Profile updated successfully',{
         position: 'top-center',
       })
@@ -82,6 +101,7 @@ export default function Settings() {
   }
 
   const handleInputChange = (field: string, value: string) => {
+    setHasUserModified(true)
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
@@ -92,20 +112,6 @@ export default function Settings() {
       console.error('Sign out failed:', error)
     }
   }
-
-  useEffect(() => {
-    if (profile) {
-      setFormData({
-        username: profile.user.username || '',
-        bio: profile.user.bio || '',
-        graduationYear: profile.user.graduationYear?.toString() || '',
-        branch: profile.user.branch || '',
-        currentCompany: profile.user.currentCompany || '',
-        currentRole: profile.user.currentRole || '',
-        linkedinUrl: profile.user.linkedinUrl || ''
-      })
-    }
-  }, [profile])
 
   if (isPending) return <Loader />
 
@@ -166,7 +172,10 @@ export default function Settings() {
 
           <div className="space-y-2">
             <Label htmlFor="branch">Branch</Label>
-            <Select value={formData.branch} onValueChange={(value) => handleInputChange('branch', value)}>
+            <Select 
+              value={formData.branch} 
+              onValueChange={(value) => handleInputChange('branch', value)}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select your branch" />
               </SelectTrigger>
@@ -215,7 +224,7 @@ export default function Settings() {
 
           <Button 
             type="submit" 
-            disabled={updateProfileMutation.isPending || !formData.username || !formData.graduationYear}
+            disabled={!hasUserModified || updateProfileMutation.isPending || !formData.username || !formData.graduationYear}
             className="w-full md:w-auto"
           >
             <Save className="w-4 h-4 mr-2" />
