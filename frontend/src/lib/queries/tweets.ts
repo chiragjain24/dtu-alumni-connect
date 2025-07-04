@@ -75,6 +75,29 @@ function updateTweetAcrossAllCaches(
         }))
       };
     }
+    // Handle Array of Tweet + parentTweets + replies (user replies structure)
+    else if (Array.isArray(currentData) && currentData.length > 0 && currentData[0].tweet && currentData[0].parentTweets && currentData[0].replies) {
+      updatedData = currentData.map(item => {
+        if(item.tweet.id === tweetId) {
+          return {
+            ...item,
+            tweet: updater(item.tweet)
+          }
+        }
+        else if(item.parentTweets.some((t: Tweet) => t.id === tweetId)) {
+          return {
+            ...item,
+            parentTweets: item.parentTweets.map((t: Tweet) => t.id === tweetId ? updater(t) : t)
+          }
+        }
+        else {
+          return {
+            ...item,
+            replies: updateNestedReplies(item.replies)
+          }
+        }
+      });
+    }
     // Handle Array of Tweets (legacy)
     else if (Array.isArray(currentData)) {
       updatedData = currentData.map(tweet => {
@@ -220,7 +243,7 @@ export function useUserTweets(userId: string) {
   return useQuery({
     queryKey: ['tweets', 'user', userId],
     queryFn: async () => {
-      const response = await api.tweets.user[':id'].$get({ param: { id: userId } });
+      const response = await api.users[':id'].tweets.$get({ param: { id: userId } });
       if (!response.ok) {
         throw new Error('Failed to fetch user tweets');
       }
@@ -239,12 +262,31 @@ export function useUserLikedTweets(userId: string, enabled: boolean = true) {
   return useQuery({
     queryKey: ['tweets', 'user', 'likes', userId],
     queryFn: async () => {
-      const response = await api.tweets.user[':id'].likes.$get({ param: { id: userId } });
+      const response = await api.users[':id'].likes.$get({ param: { id: userId } });
       if (!response.ok) {
         throw new Error('Failed to fetch user liked tweets');
       }
       const data = await response.json();
       return data.tweets;
+    },
+    enabled: !!userId && enabled,
+    refetchOnWindowFocus: false,
+    refetchInterval: 300000, // 5 minutes
+    staleTime: 10000, // 10 seconds
+  });
+}
+
+// User replies query
+export function useUserReplies(userId: string, enabled: boolean = true) {
+  return useQuery({
+    queryKey: ['tweets', 'user', 'replies', userId],
+    queryFn: async () => {
+      const response = await api.users[':id'].replies.$get({ param: { id: userId } });
+      if (!response.ok) {
+        throw new Error('Failed to fetch user replies');
+      }
+      const data = await response.json();
+      return data.replies;
     },
     enabled: !!userId && enabled,
     refetchOnWindowFocus: false,
@@ -288,9 +330,10 @@ export function useCreateTweet() {
       // Invalidate and refetch timeline
       queryClient.invalidateQueries({ queryKey: ['tweets', 'timeline'] });
       
-      // If it's a reply, invalidate the parent tweet
+      // If it's a reply, invalidate the parent tweet and user replies
       if (newTweet.parentTweetId) {
         queryClient.invalidateQueries({ queryKey: ['tweets', newTweet.parentTweetId] });
+        queryClient.invalidateQueries({ queryKey: ['tweets', 'user', 'replies', newTweet.authorId] });
       }
       
       // Invalidate user tweets
@@ -346,6 +389,25 @@ export function useDeleteTweet() {
               tweets: page.tweets.filter((t: Tweet) => t.id !== tweet.id)
             }))
           };
+          queryClient.setQueryData(queryKey, updatedData);
+        }
+        // Handle Array of Tweet + parentTweets + replies (user replies structure)
+        else if (Array.isArray(currentData) && currentData.length > 0 && currentData[0].tweet && currentData[0].parentTweets && currentData[0].replies) {
+          const updatedData = currentData
+            .filter((item: any) => {
+              // Remove the entire item if the main tweet is being deleted
+              return item.tweet.id !== tweet.id;
+            })
+            .map((item: any) => {
+              // If any parent tweet is being deleted, remove it from parentTweets
+              if (item.parentTweets.some((t: Tweet) => t.id === tweet.id)) {
+                return {
+                  ...item,
+                  parentTweets: item.parentTweets.filter((t: Tweet) => t.id !== tweet.id)
+                };
+              }
+              return item;
+            });
           queryClient.setQueryData(queryKey, updatedData);
         }
         // Handle Array of Tweets (legacy)

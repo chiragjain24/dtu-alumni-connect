@@ -6,9 +6,7 @@
     "build:worker": "bun build src/index.ts --outdir dist --target browser --format esm --minify",
     "start": "bun run dist/index.js",
     "deploy": "wrangler deploy",
-    "deploy:dev": "wrangler deploy --env development",
-    "deploy:prod": "wrangler deploy --env production",
-    "wrangler:dev": "wrangler dev --env development",
+    "wrangler:dev": "wrangler dev",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate"
   },

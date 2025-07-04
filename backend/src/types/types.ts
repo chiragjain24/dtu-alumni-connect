@@ -32,4 +32,5 @@ export interface Tweet {
 export interface TweetWithTreeMetadata extends Tweet {
     nodeType: 'target' | 'parent' | 'reply' | 'unknown';
     treeLevel: number;
+    replyId?: string; // Used in user profile replies to group replies with their parents 
 }

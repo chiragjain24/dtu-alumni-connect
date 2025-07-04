@@ -3,11 +3,13 @@ import { zValidator } from '@hono/zod-validator'
 import { z } from 'zod'
 import { db } from '../db'
 import { user } from '../db/schema/auth'
-import { eq, and, sql } from 'drizzle-orm'
 import { auth } from '../lib/auth'
 import { follows } from '../db/schema/tweets'
 import { HTTPException } from 'hono/http-exception'
-
+import { tweets, likes, retweets, bookmarks } from '../db/schema/tweets';
+import { user as users } from '../db/schema/auth';
+import { type TweetWithTreeMetadata } from '../types/types';
+import { eq, desc, and, sql, isNull } from 'drizzle-orm';
 // Profile setup/update schema
 const profileUpdateSchema = z.object({
     username: z.string().min(3).max(50).regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores"),
@@ -271,5 +273,219 @@ export const usersRoute = new Hono<{
   } catch (error) {
     console.error('Error fetching following:', error)
     throw new HTTPException(500, { message: 'Failed to fetch following' })
+  }
+})
+
+
+// GET /api/users/:id/tweets - Get user tweets
+.get('/:id/tweets', requireAuth, zValidator('param', userParamsSchema), async (c) => {
+  const currentUser = c.get('user');
+  const { id } = c.req.valid('param');
+
+  try {
+    const userTweets = await db
+      .select({
+        id: tweets.id,
+        content: tweets.content,
+        authorId: tweets.authorId,
+        parentTweetId: tweets.parentTweetId,
+        isRetweet: tweets.isRetweet,
+        originalTweetId: tweets.originalTweetId,
+        mediaItems: tweets.mediaItems,
+        likesCount: tweets.likesCount,
+        retweetsCount: tweets.retweetsCount,
+        repliesCount: tweets.repliesCount,
+        createdAt: tweets.createdAt,
+        updatedAt: tweets.updatedAt,
+        authorName: users.name,
+        authorUsername: users.username,
+        authorImage: users.image,
+        isLikedByUser: sql<boolean>`CASE WHEN ${likes.userId} IS NOT NULL THEN true ELSE false END`,
+        isRetweetedByUser: sql<boolean>`CASE WHEN ${retweets.userId} IS NOT NULL THEN true ELSE false END`,
+        isBookmarkedByUser: sql<boolean>`CASE WHEN ${bookmarks.userId} IS NOT NULL THEN true ELSE false END`,
+      })
+      .from(tweets)
+      .leftJoin(users, eq(tweets.authorId, users.id))
+      .leftJoin(likes, and(
+        eq(likes.tweetId, tweets.id),
+        eq(likes.userId, currentUser!.id)
+      ))
+      .leftJoin(retweets, and(
+        eq(retweets.tweetId, tweets.id),
+        eq(retweets.userId, currentUser!.id)
+      ))
+      .leftJoin(bookmarks, and(
+        eq(bookmarks.tweetId, tweets.id),
+        eq(bookmarks.userId, currentUser!.id)
+      ))
+      .where(and(
+        eq(tweets.authorId, id),
+        isNull(tweets.parentTweetId) // Only top-level tweets
+      ))
+      .orderBy(desc(tweets.createdAt))
+      .limit(50);
+
+    return c.json({ tweets: userTweets });
+  } catch (error) {
+    console.error('Error fetching user tweets:', error);
+    throw new HTTPException(500, { message: 'Failed to fetch user tweets' });
+  }
+})
+
+// GET /api/users/:id/likes - Get user's liked tweets
+.get('/:id/likes', requireAuth, zValidator('param', userParamsSchema), async (c) => {
+  const currentUser = c.get('user');
+  const { id } = c.req.valid('param');
+
+  try {
+    const likedTweets = await db
+      .select({
+        id: tweets.id,
+        content: tweets.content,
+        authorId: tweets.authorId,
+        parentTweetId: tweets.parentTweetId,
+        isRetweet: tweets.isRetweet,
+        originalTweetId: tweets.originalTweetId,
+        mediaItems: tweets.mediaItems,
+        likesCount: tweets.likesCount,
+        retweetsCount: tweets.retweetsCount,
+        repliesCount: tweets.repliesCount,
+        createdAt: tweets.createdAt,
+        updatedAt: tweets.updatedAt,
+        authorName: users.name,
+        authorUsername: users.username,
+        authorImage: users.image,
+        isLikedByUser: sql<boolean>`CASE WHEN current_user_likes.user_id IS NOT NULL THEN true ELSE false END`,
+        isRetweetedByUser: sql<boolean>`CASE WHEN ${retweets.userId} IS NOT NULL THEN true ELSE false END`,
+        isBookmarkedByUser: sql<boolean>`CASE WHEN ${bookmarks.userId} IS NOT NULL THEN true ELSE false END`,
+      })
+      .from(likes)
+      .innerJoin(tweets, eq(likes.tweetId, tweets.id))
+      .leftJoin(users, eq(tweets.authorId, users.id))
+      .leftJoin(
+        sql`(SELECT user_id, tweet_id FROM likes WHERE user_id = ${currentUser!.id}) AS current_user_likes`, // temporary table
+        sql`current_user_likes.tweet_id = ${tweets.id}`
+      )
+      .leftJoin(retweets, and(
+        eq(retweets.tweetId, tweets.id),
+        eq(retweets.userId, currentUser!.id)
+      ))
+      .leftJoin(bookmarks, and(
+        eq(bookmarks.tweetId, tweets.id),
+        eq(bookmarks.userId, currentUser!.id)
+      ))
+      .where(eq(likes.userId, id))
+      .orderBy(desc(likes.createdAt))
+      .limit(50);
+
+    return c.json({ tweets: likedTweets });
+  } catch (error) {
+    console.error('Error fetching user likes:', error);
+    throw new HTTPException(500, { message: 'Failed to fetch user likes' });
+  }
+})
+
+// GET /api/users/:id/replies - Get user's replies with parent tweets
+.get('/:id/replies', requireAuth, zValidator('param', userParamsSchema), async (c) => {
+  const currentUser = c.get('user');
+  const { id } = c.req.valid('param');
+
+  try {
+    // Single query to get all user replies + their parent tweets
+    const allTweets: TweetWithTreeMetadata[] = await db
+      .select({
+        id: tweets.id,
+        content: tweets.content,
+        authorId: tweets.authorId,
+        parentTweetId: tweets.parentTweetId,
+        isRetweet: tweets.isRetweet,
+        originalTweetId: tweets.originalTweetId,
+        mediaItems: tweets.mediaItems,
+        likesCount: tweets.likesCount,
+        retweetsCount: tweets.retweetsCount,
+        repliesCount: tweets.repliesCount,
+        createdAt: tweets.createdAt,
+        updatedAt: tweets.updatedAt,
+        authorName: users.name,
+        authorUsername: users.username,
+        authorImage: users.image,
+        isLikedByUser: sql<boolean>`CASE WHEN ${likes.userId} IS NOT NULL THEN true ELSE false END`,
+        isRetweetedByUser: sql<boolean>`CASE WHEN ${retweets.userId} IS NOT NULL THEN true ELSE false END`,
+        isBookmarkedByUser: sql<boolean>`CASE WHEN ${bookmarks.userId} IS NOT NULL THEN true ELSE false END`,
+        nodeType: sql<'target' | 'parent'>`
+          CASE 
+            WHEN tweet_tree.direction = 'target' THEN 'target'
+            WHEN tweet_tree.direction = 'parent' THEN 'parent'
+          END
+        `,
+        treeLevel: sql<number>`COALESCE(tweet_tree.level, 0)`,
+        replyId: sql<string>`tweet_tree.reply_id`,
+      })
+      .from(sql`
+        (
+          WITH limited_replies AS (
+            SELECT r.id, r.parent_tweet_id, r.created_at
+            FROM tweets r
+            WHERE r.author_id = ${id} AND r.parent_tweet_id IS NOT NULL
+            ORDER BY r.created_at DESC
+            LIMIT 40
+          )
+          
+          -- Get all user replies as targets
+          SELECT r.id as id, 'target' as direction, 0 as level, r.id as reply_id, r.created_at as reply_created_at
+          FROM limited_replies r
+          
+          UNION ALL
+          
+          -- Get parent tweets for those replies
+          SELECT p.id as id, 'parent' as direction, 1 as level, r.id as reply_id, r.created_at as reply_created_at
+          FROM limited_replies r
+          INNER JOIN tweets p ON p.id = r.parent_tweet_id
+        ) AS tweet_tree
+      `)
+      .innerJoin(tweets, eq(sql`tweet_tree.id`, tweets.id))
+      .leftJoin(users, eq(tweets.authorId, users.id))
+      .leftJoin(likes, and(
+        eq(likes.tweetId, tweets.id),
+        eq(likes.userId, currentUser!.id)
+      ))
+      .leftJoin(retweets, and(
+        eq(retweets.tweetId, tweets.id),
+        eq(retweets.userId, currentUser!.id)
+      ))
+      .leftJoin(bookmarks, and(
+        eq(bookmarks.tweetId, tweets.id),
+        eq(bookmarks.userId, currentUser!.id)
+      ))
+      .orderBy(sql`tweet_tree.reply_created_at DESC, tweet_tree.level ASC`); // Group by reply creation time, parents first
+
+    if (allTweets.length === 0) {
+      return c.json({ replies: [] });
+    }
+
+    // Separate target tweets (replies) from parent tweets
+    const targetTweets = allTweets.filter(t => t.nodeType === 'target');
+    const parentTweets = allTweets.filter(t => t.nodeType === 'parent');
+    
+    // Create a map of parent tweets by their ID for quick lookup
+    const parentMap = new Map(parentTweets.map(p => [p.id, p]));
+    
+    // Format each reply with its parent
+    const replies = targetTweets.map(reply => {
+      const { nodeType, treeLevel, replyId, ...tweet } = reply;
+      const parentTweet = reply.parentTweetId ? parentMap.get(reply.parentTweetId) : null;
+      const { nodeType: _, treeLevel: __, replyId: ___, ...cleanParent } = parentTweet || {} as any;
+      
+      return {
+        tweet,
+        parentTweets: parentTweet ? [cleanParent] : [],
+        replies: []
+      };
+    });
+
+    return c.json({ replies });
+  } catch (error) {
+    console.error('Error fetching user replies:', error);
+    throw new HTTPException(500, { message: 'Failed to fetch user replies' });
   }
 })

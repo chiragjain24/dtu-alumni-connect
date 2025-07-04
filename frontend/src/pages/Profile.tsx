@@ -1,13 +1,14 @@
 import { useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import { Calendar, Link as LinkIcon, Building, GraduationCap, Users, Edit, ArrowLeft } from 'lucide-react'
-import { Button } from '../components/ui/button'
-import { Avatar } from '../components/ui/avatar'
-import { Card, CardContent } from '../components/ui/card'
+import { useParams, useNavigate } from 'react-router-dom'
+import { ArrowLeft, Calendar, GraduationCap, Building, LinkIcon, Edit, Users, Trash2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Avatar } from '@/components/ui/avatar'
+import { Card, CardContent } from '@/components/ui/card'
 import useGetMyProfile from '@/lib/queries'
 import { useGetUserProfile } from '@/lib/queries/users'
-import { useUserTweets, useUserLikedTweets } from '@/lib/queries/tweets'
+import { useUserTweets, useUserLikedTweets, useUserReplies } from '@/lib/queries/tweets'
 import { TweetCard } from '@/components/tweets/tweet-card'
+import { TweetReplyCard } from '@/components/tweets/tweet-reply-card'
 import Loader from '@/components/loader'
 
 export default function Profile() {
@@ -27,6 +28,8 @@ export default function Profile() {
   const { data: userTweets, isPending: tweetsLoading } = useUserTweets(profile?.user.id || '')
   const { data: userLikedTweets, isPending: likedTweetsLoading } = useUserLikedTweets(
     profile?.user.id || '', activeTab === 'likes')
+  const { data: userReplies, isPending: repliesLoading } = useUserReplies(
+    profile?.user.id || '', activeTab === 'replies')
 
 
   if (isPending) return <Loader />
@@ -230,21 +233,66 @@ export default function Profile() {
         )}
 
         {activeTab === 'replies' && (
-          <Card className="shadow-none border-none">
-            <CardContent className="p-8 text-center">
-              <div className="space-y-4">
-                <div className="w-16 h-16 mx-auto bg-muted rounded-full flex items-center justify-center">
-                  <Users className="w-8 h-8 text-muted-foreground" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold mb-2">No replies yet</h3>
-                  <p className="text-muted-foreground">
-                    When you reply to tweets, they'll show up here.
-                  </p>
-                </div>
+          <div>
+            {repliesLoading ? (
+              <div className="p-8 text-center">
+                <Loader />
               </div>
-            </CardContent>
-          </Card>
+            ) : userReplies && userReplies.length > 0 ? (
+              <div>
+                {userReplies.map((replyData) => (
+                  <div key={replyData.tweet.id} className="border-b-2 border-border">
+                    {/* Parent Tweet */}
+                    {replyData.parentTweets.length > 0 ? (
+                      <TweetReplyCard 
+                        tweet={replyData.parentTweets[0]}
+                        showConnector={false}
+                        isLast={false}
+                      />
+                    ) : (
+                      <div className="px-4 py-3 relative">
+                        {/* Threading line continuation to below */}
+                        <div className="absolute left-9 w-0.5 bg-border" style={{ top: '45px', height: 'calc(100% - 45px)' }}></div>
+                        
+                        <div className="flex space-x-3">
+                          <div className="w-9 h-9 bg-muted/50 rounded-full flex items-center justify-center border border-border">
+                            <Trash2 className="w-4 h-4 text-muted-foreground/70" />
+                          </div>
+                          <div className="flex-1 flex items-center">
+                            <div className="bg-muted/30 rounded-lg px-4 py-3 border border-border/50">
+                              <p className="text-muted-foreground text-sm">This tweet has been deleted</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {/* Reply Tweet */}
+                    <TweetReplyCard 
+                      tweet={replyData.tweet}
+                      showConnector={true}
+                      isLast={true}
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <Card className="shadow-none border-none">
+                <CardContent className="p-8 text-center">
+                  <div className="space-y-4">
+                    <div className="w-16 h-16 mx-auto bg-muted rounded-full flex items-center justify-center">
+                      <Users className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-semibold mb-2">No replies yet</h3>
+                      <p className="text-muted-foreground">
+                        {isMyProfile ? "When you reply to tweets, they'll show up here." : `@${username} hasn't replied to any tweets yet.`}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         )}
 
         {activeTab === 'media' && (
