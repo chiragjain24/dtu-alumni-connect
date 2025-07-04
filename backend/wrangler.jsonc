@@ -1,3 +1,4 @@
+
 {
   // Cloudflare Worker configuration for DTU Alumni Backend
   "name": "dtu-alumni-backend",
@@ -21,8 +22,6 @@
   "env": {
     "production": {
       "logpush": true,
-      "FRONTEND_URL": "https://dtu-alumni.pages.dev",
-      "BETTER_AUTH_URL": "https://dtu-alumni-backend.chiragjain78382.workers.dev",
       "NODE_ENV": "production"
     }
   }
