@@ -397,10 +397,7 @@ export function useDeleteTweet() {
           }
         });
       }
-    },
-    onSuccess: (_, tweet) => {
-      queryClient.removeQueries({ queryKey: ['tweets', tweet.id] });
-    },
+    }
   });
 }
 

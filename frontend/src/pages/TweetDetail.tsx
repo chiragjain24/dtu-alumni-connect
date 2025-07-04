@@ -18,6 +18,7 @@ export default function TweetDetail() {
   const { data, isLoading, error } = useTweet(id!)
   const createTweetMutation = useCreateTweet()
   const replyComposerRef = useRef<HTMLDivElement>(null)
+  const mainTweetRef = useRef<HTMLDivElement>(null)
 
   const handleCreateReply = async (content: string, mediaItems: MediaItem[]) => {
     if (!id) return
@@ -32,10 +33,28 @@ export default function TweetDetail() {
     replyComposerRef.current?.querySelector('textarea')?.focus();
   }
 
-  // Scroll to top when tweet changes
+  // Scroll to main tweet when page loads or tweet changes (only if there are parent tweets)
   useEffect(() => {
-    window.scrollTo(0, 0)
-  }, [id])
+    if (data && data.parentTweets.length > 0 && mainTweetRef.current) {
+      // Add a small delay to ensure the DOM is fully rendered
+      const timer = setTimeout(() => {
+        const element = mainTweetRef.current
+        if (element) {
+          const rect = element.getBoundingClientRect()
+          const headerHeight = 65 // Header height offset
+          const currentScrollY = window.scrollY
+          const targetScrollY = currentScrollY + rect.top - headerHeight
+          
+          window.scrollTo({
+            top: targetScrollY,
+            behavior: 'instant'
+          })
+        }
+      }, 100)
+      
+      return () => clearTimeout(timer)
+    }
+  }, [data, id])
 
   if (isLoading) {
     return (
@@ -118,7 +137,7 @@ export default function TweetDetail() {
       )}
 
       {/* Main Tweet */}
-      <div className="border-b border-border">
+      <div ref={mainTweetRef} className="border-b border-border">
         <TweetDetailCard 
           tweet={tweet}
           onReply={handleReplyClick}
