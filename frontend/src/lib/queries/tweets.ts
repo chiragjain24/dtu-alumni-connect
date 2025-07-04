@@ -168,7 +168,7 @@ export function useTimeline() {
     queryKey: ['tweets', 'timeline'],
     queryFn: async ({ pageParam }: { pageParam?: string }) => {
       const response = await api.tweets.timeline.$get({
-        query: { limit: '30' , cursor: pageParam }
+        query: { limit: '40' , cursor: pageParam }
       });
       
       if (!response.ok) {

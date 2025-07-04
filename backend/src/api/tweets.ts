@@ -668,7 +668,7 @@ const app = new Hono<{
         isNull(tweets.parentTweetId) // Only top-level tweets
       ))
       .orderBy(desc(tweets.createdAt))
-      .limit(20);
+      .limit(50);
 
     return c.json({ tweets: userTweets });
   } catch (error) {
@@ -769,7 +769,7 @@ const app = new Hono<{
       ))
       .where(eq(bookmarks.userId, currentUser!.id))
       .orderBy(desc(bookmarks.createdAt))
-      .limit(50);
+      .limit(100);
 
     return c.json({ tweets: bookmarkedTweets });
   } catch (error) {

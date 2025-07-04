@@ -14,7 +14,7 @@ import RootLayout from './components/layout/root-layout'
 // Placeholder components for Phase 2
 const PlaceholderPage = ({ title }: { title: string }) => (
   <div className="min-h-screen">
-    <div className="sticky top-0 bg-background/80 backdrop-blur-md border-b border-border px-4 py-3">
+    <div className="sticky top-0 bg-background/80 backdrop-blur-md border-b border-border px-4 py-3 z-10">
       <h1 className="text-xl font-bold text-foreground">{title}</h1>
     </div>
     <div className="p-6 text-center">

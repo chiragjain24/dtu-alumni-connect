@@ -49,7 +49,7 @@ export default function Explore() {
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <div className="sticky top-0 bg-background/80 backdrop-blur-md border-b border-border px-4 py-3">
+      <div className="sticky top-0 bg-background/80 backdrop-blur-md border-b border-border px-4 py-3 z-10">
         <h1 className="text-xl font-bold text-foreground">Explore</h1>
       </div>
 
