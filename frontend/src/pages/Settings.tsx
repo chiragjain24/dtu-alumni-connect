@@ -29,6 +29,13 @@ const DTU_BRANCHES = [
   'Civil Engineering',
   'Environmental Engineering',
   'Biotechnology',
+  'B.Design',
+  'BBA',
+  'MBA',
+  'PHD',
+  'M.Tech',
+  'B.Com',
+  'Others'
 ]
 
 type SettingsTab = 'profile' | 'account' | 'notifications' | 'appearance'
@@ -40,6 +47,7 @@ export default function Settings() {
   
   // Use profile data directly with fallbacks - no local state needed
   const currentFormData = {
+    name: profile?.user.name || '',
     username: profile?.user.username || '',
     bio: profile?.user.bio || '',
     graduationYear: profile?.user.graduationYear?.toString() || '',
@@ -56,6 +64,7 @@ export default function Settings() {
   
   // Update form data when profile loads, but only if user hasn't started editing
   if (profile && !hasUserModified && JSON.stringify(formData) === JSON.stringify({
+    name: '',
     username: '',
     bio: '',
     graduationYear: '',
@@ -130,20 +139,44 @@ export default function Settings() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="space-y-2">
+            <Label htmlFor="linkedinUrl">LinkedIn Profile</Label>
+            <Input
+              id="linkedinUrl"
+              type="url"
+              value={formData.linkedinUrl}
+              onChange={(e) => handleInputChange('linkedinUrl', e.target.value)}
+              placeholder="https://linkedin.com/in/yourprofile"
+            />
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Display Name*</Label>
+              <Input
+                id="name"
+                value={formData.name}
+                minLength={4}
+                maxLength={50}
+                onChange={(e) => handleInputChange('name', e.target.value)}
+                placeholder="John Doe"
+              />
+            </div>
+            
             <div className="space-y-2">
               <Label htmlFor="username">Username*</Label>
               <Input
                 id="username"
                 value={formData.username}
-                minLength={3}
+                minLength={4}
                 maxLength={50}
                 onChange={(e) => handleInputChange('username', e.target.value)}
                 placeholder="@johndoe"
               />
             </div>
-            
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="graduationYear">Graduation Year*</Label>
               <Input
@@ -156,36 +189,25 @@ export default function Settings() {
                 placeholder="2020"
               />
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="linkedinUrl">LinkedIn Profile</Label>
-            <Input
-              id="linkedinUrl"
-              type="url"
-              value={formData.linkedinUrl}
-              onChange={(e) => handleInputChange('linkedinUrl', e.target.value)}
-              placeholder="https://linkedin.com/in/yourprofile"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="branch">Branch</Label>
-            <Select 
-              value={formData.branch} 
-              onValueChange={(value) => handleInputChange('branch', value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select your branch" />
-              </SelectTrigger>
-              <SelectContent>
-                {DTU_BRANCHES.map((branch) => (
-                  <SelectItem key={branch} value={branch}>
-                    {branch}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            
+            <div className="space-y-2">
+              <Label htmlFor="branch">Branch</Label>
+              <Select 
+                value={formData.branch} 
+                onValueChange={(value) => handleInputChange('branch', value)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select your branch" />
+                </SelectTrigger>
+                <SelectContent className="max-h-72 overflow-y-auto">
+                  {DTU_BRANCHES.map((branch) => (
+                    <SelectItem key={branch} value={branch}>
+                      {branch}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -223,7 +245,7 @@ export default function Settings() {
 
           <Button 
             type="submit" 
-            disabled={!hasUserModified || updateProfileMutation.isPending || !formData.username || !formData.graduationYear}
+            disabled={!hasUserModified || updateProfileMutation.isPending || !formData.name || !formData.username || !formData.graduationYear}
             className="w-full md:w-auto"
           >
             <Save className="w-4 h-4 mr-2" />
@@ -376,7 +398,9 @@ export default function Settings() {
       {/* Header */}
       <div className="sticky top-0 bg-background/80 backdrop-blur-md border-b border-border px-4 py-3 z-10 flex items-center gap-4">
         <BackButton />
-        <h1 className="text-xl font-bold">Settings</h1>
+        <div className="h-[2rem] flex flex-col justify-center">
+          <h1 className="text-xl font-bold">Settings</h1>
+        </div>
       </div>
 
       <div className="flex flex-col">

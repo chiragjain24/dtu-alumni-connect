@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "concurrently --names \"BACKEND,FRONTEND\" --prefix-colors \"blue,green\" \"bun run devb\" \"bun run devf\"",
     "build": "bun run build:b && bun run build:f",
+    "deploy": "cd backend; bun run deploy",
     "install:all": "bun run install:f && bun run install:b",
     "devb": "cd backend; bun run dev",
     "devf": "cd frontend; bun run dev",

@@ -11,7 +11,8 @@ import { user as users } from '../db/schema/auth';
 import { eq, desc, and, sql, isNull, lt } from 'drizzle-orm';
 // Profile setup/update schema
 const profileUpdateSchema = z.object({
-    username: z.string().min(3).max(50).regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores"),
+    name: z.string().min(4).max(50),
+    username: z.string().min(4).max(50).regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores"),
     bio: z.string().max(500).optional(),
     graduationYear: z.number().int().min(1941).max(2030).optional(),
     branch: z.string().max(100).optional(),

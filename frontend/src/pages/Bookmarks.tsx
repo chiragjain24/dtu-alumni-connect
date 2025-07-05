@@ -61,8 +61,8 @@ export default function Bookmarks() {
   if (isLoading) {
     return (
       <div className="">
-        <div className="sticky top-0 bg-background/80 backdrop-blur-md border-b border-border px-4 py-3 z-10">
-          <div className="flex items-center space-x-3">
+        <div className="sticky top-0 bg-background/80 backdrop-blur-md border-b border-border px-4 py-3 z-10 flex items-center gap-4">
+          <div className="h-[2rem] flex flex-col justify-center">
             <h1 className="text-xl font-bold text-foreground">Bookmarks</h1>
           </div>
         </div>
@@ -76,8 +76,8 @@ export default function Bookmarks() {
   if (error) {
     return (
       <div className="min-h-screen">
-        <div className="sticky top-0 bg-background/80 backdrop-blur-md border-b border-border px-4 py-3 z-10">
-          <div className="flex items-center space-x-3">
+        <div className="sticky top-0 bg-background/80 backdrop-blur-md border-b border-border px-4 py-3 z-10 flex items-center gap-4">
+          <div className="h-[2rem] flex flex-col justify-center">
             <h1 className="text-xl font-bold text-foreground">Bookmarks</h1>
           </div>
         </div>
@@ -92,11 +92,9 @@ export default function Bookmarks() {
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <div className="sticky top-0 bg-background/80 backdrop-blur-md border-b border-border px-4 py-3 z-10">
-        <div className="flex items-center space-x-3">
-          <div>
-            <h1 className="text-xl font-bold text-foreground">Bookmarks</h1>
-          </div>
+      <div className="sticky top-0 bg-background/80 backdrop-blur-md border-b border-border px-4 py-3 z-10 flex items-center gap-4">
+        <div className="h-[2rem] flex flex-col justify-center">
+          <h1 className="text-xl font-bold text-foreground">Bookmarks</h1>
         </div>
       </div>
 

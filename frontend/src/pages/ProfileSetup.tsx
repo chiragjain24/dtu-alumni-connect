@@ -25,6 +25,12 @@ const DTU_BRANCHES = [
   'Civil Engineering',
   'Environmental Engineering',
   'Biotechnology',
+  'BBA',
+  'MBA',
+  'PHD',
+  'M.Tech',
+  'B.Com',
+  'Others'
 ]
 
 export default function ProfileSetup() {
@@ -34,6 +40,7 @@ export default function ProfileSetup() {
 
   // Use profile data directly with fallbacks - no local state needed
   const currentFormData = {
+    name: profile?.user.name || '',
     username: profile?.user.username || '',
     bio: profile?.user.bio || '',
     graduationYear: profile?.user.graduationYear?.toString() || '',
@@ -50,6 +57,7 @@ export default function ProfileSetup() {
   
   // Update form data when profile loads, but only if user hasn't started editing
   if (profile && !hasUserModified && JSON.stringify(formData) === JSON.stringify({
+    name: '',
     username: '',
     bio: '',
     graduationYear: '',
@@ -103,8 +111,31 @@ export default function ProfileSetup() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="linkedinUrl">LinkedIn Profile</Label>
+                <Input
+                  id="linkedinUrl"
+                  type="url"
+                  value={formData.linkedinUrl}
+                  onChange={(e) => handleInputChange('linkedinUrl', e.target.value)}
+                  placeholder="https://linkedin.com/in/yourprofile"
+                />
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Display Name *</Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => handleInputChange('name', e.target.value)}
+                    placeholder="John Doe"
+                    required
+                    minLength={4}
+                    maxLength={50}
+                  />
+                </div>
+                
                 <div className="space-y-2">
                   <Label htmlFor="username">Username *</Label>
                   <Input
@@ -113,11 +144,13 @@ export default function ProfileSetup() {
                     onChange={(e) => handleInputChange('username', e.target.value)}
                     placeholder="@johndoe"
                     required
-                    minLength={3}
+                    minLength={4}
                     maxLength={50}
                   />
                 </div>
-                
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="graduationYear">Graduation Year *</Label>
                   <Input
@@ -131,36 +164,25 @@ export default function ProfileSetup() {
                     required
                   />
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="linkedinUrl">LinkedIn Profile</Label>
-                <Input
-                  id="linkedinUrl"
-                  type="url"
-                  value={formData.linkedinUrl}
-                  onChange={(e) => handleInputChange('linkedinUrl', e.target.value)}
-                  placeholder="https://linkedin.com/in/yourprofile"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="branch">Branch</Label>
-                <Select 
-                  value={formData.branch} 
-                  onValueChange={(value) => handleInputChange('branch', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select your branch" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {DTU_BRANCHES.map((branch) => (
-                      <SelectItem key={branch} value={branch}>
-                        {branch}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="branch">Branch</Label>
+                  <Select 
+                    value={formData.branch} 
+                    onValueChange={(value) => handleInputChange('branch', value)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select your branch" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-72 overflow-y-auto">
+                      {DTU_BRANCHES.map((branch) => (
+                        <SelectItem key={branch} value={branch}>
+                          {branch}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -199,7 +221,7 @@ export default function ProfileSetup() {
               <Button 
                 type="submit" 
                 className="w-full"
-                disabled={!hasUserModified || updateProfileMutation.isPending || !formData.username || !formData.graduationYear}
+                disabled={!hasUserModified || updateProfileMutation.isPending || !formData.name || !formData.username || !formData.graduationYear}
               >
                 {updateProfileMutation.isPending ? 'Saving...' : 'Complete Profile'}
               </Button>
