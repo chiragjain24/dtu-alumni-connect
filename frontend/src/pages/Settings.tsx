@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { User, Shield, Bell, Palette, LogOut, Save, ArrowLeft } from 'lucide-react'
+import { User, Shield, Bell, Palette, LogOut, Save } from 'lucide-react'
 import { signOut } from '@/lib/auth-client'
 import { Button } from '../components/ui/button'
+import { BackButton } from '@/components/others/back-button'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
 import { Textarea } from '../components/ui/textarea'
@@ -34,7 +34,6 @@ const DTU_BRANCHES = [
 type SettingsTab = 'profile' | 'account' | 'notifications' | 'appearance'
 
 export default function Settings() {
-  const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { data: profile, isPending } = useGetMyProfile()
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile')
@@ -376,14 +375,7 @@ export default function Settings() {
     <div className="min-h-screen">
       {/* Header */}
       <div className="sticky top-0 bg-background/80 backdrop-blur-md border-b border-border px-4 py-3 z-10 flex items-center gap-4">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => navigate(-1)}
-          className="p-2"
-        >
-          <ArrowLeft className="w-4 h-4" />
-        </Button>
+        <BackButton />
         <h1 className="text-xl font-bold">Settings</h1>
       </div>
 

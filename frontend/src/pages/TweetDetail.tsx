@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useEffect, useRef } from 'react'
-import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { BackButton } from '@/components/others/back-button'
 import { TweetDetailCard } from '@/components/tweets/tweet-detail-card'
 import { TweetThreadCard } from '@/components/tweets/tweet-thread-card'
 import { TweetComposer } from '@/components/tweets/tweet-composer'
@@ -61,14 +61,7 @@ export default function TweetDetail() {
       <div className="min-h-screen">
         <div className="sticky top-0 bg-background/80 backdrop-blur-md border-b border-border px-4 py-3 z-10">
           <div className="flex items-center space-x-4">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => navigate(-1)}
-              className="rounded-full p-2"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
+            <BackButton />
             <h1 className="text-xl font-bold text-foreground">Tweet</h1>
           </div>
         </div>
@@ -84,14 +77,7 @@ export default function TweetDetail() {
       <div className="min-h-screen">
         <div className="sticky top-0 bg-background/80 backdrop-blur-md border-b border-border px-4 py-3 z-10">
           <div className="flex items-center space-x-4">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => navigate(-1)}
-              className="rounded-full p-2"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
+            <BackButton />
             <h1 className="text-xl font-bold text-foreground">Tweet</h1>
           </div>
         </div>
@@ -111,14 +97,7 @@ export default function TweetDetail() {
       {/* Header */}
       <div className="sticky top-0 bg-background/80 backdrop-blur-md border-b border-border px-4 py-3 z-10">
         <div className="flex items-center space-x-4">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => navigate(-1)}
-            className="rounded-full p-2"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
+          <BackButton />
           <h1 className="text-xl font-bold text-foreground">Tweet</h1>
         </div>
       </div>

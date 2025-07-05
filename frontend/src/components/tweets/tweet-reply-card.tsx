@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
-import { ProfileHoverCard } from '@/components/ui/profile-hover-card'
+import { ProfileHoverCard } from '@/components/others/profile-hover-card'
 import { 
   DropdownMenu, 
   DropdownMenuContent, 

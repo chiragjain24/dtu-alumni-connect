@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Calendar, GraduationCap, Building, LinkIcon, Edit, Users} from 'lucide-react'
+import { Calendar, GraduationCap, Building, LinkIcon, Edit, Users} from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { BackButton } from '@/components/others/back-button'
 import { Avatar } from '@/components/ui/avatar'
 import { Card, CardContent } from '@/components/ui/card'
 import useGetMyProfile from '@/lib/queries'
@@ -53,14 +54,7 @@ export default function Profile() {
     <div className="min-h-screen">
       {/* Header */}
       <div className="sticky top-0 bg-background/80 backdrop-blur-md border-b border-border px-4 py-3 z-10 flex items-center gap-4">
-        <Button 
-          variant="ghost" 
-          size="sm"
-          onClick={() => navigate(-1)}
-          className="p-2"
-        >
-          <ArrowLeft className="w-4 h-4" />
-        </Button>
+        <BackButton />
         <div className="h-[2rem] flex flex-col justify-center">
           <h1 className="text-xl font-bold">{user.name}</h1>
           {/* <p className="text-xs text-muted-foreground">{totalTweetCount} posts</p> */}

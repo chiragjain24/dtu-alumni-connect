@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { Avatar, AvatarImage, AvatarFallback } from './avatar'
-import { Button } from './button'
+import { Avatar, AvatarImage, AvatarFallback } from '../ui/avatar'
+import { Button } from '../ui/button'
 import { Calendar, Building, GraduationCap, ExternalLink } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useGetUserProfile } from '@/lib/queries/users'
