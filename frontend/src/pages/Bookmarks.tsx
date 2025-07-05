@@ -1,10 +1,62 @@
-import { useBookmarkedTweets } from '@/lib/queries/tweets'
+import { useBookmarkedTweetsInfinite } from '@/lib/queries/tweets'
 import { TweetCard } from '@/components/tweets/tweet-card'
 import Loader from '@/components/loader'
 import { Bookmark } from 'lucide-react'
+import type { Tweet } from '@/types/types'
+import { useWindowVirtualizer } from '@tanstack/react-virtual'
+import { useCallback, useMemo, useRef, useEffect } from 'react'
 
 export default function Bookmarks() {
-  const { data: bookmarkedTweets, isLoading, error } = useBookmarkedTweets()
+  
+  const { 
+    data, 
+    isLoading, 
+    error, 
+    fetchNextPage, 
+    hasNextPage, 
+    isFetchingNextPage 
+  } = useBookmarkedTweetsInfinite()
+  
+  const parentRef = useRef<HTMLDivElement>(null)
+
+  // Flatten all tweets from all pages
+  const allTweets = useMemo(() => {
+    if (!data?.pages) return []
+    return data.pages.flatMap((page: any) => page.tweets as Tweet[])
+  }, [data])
+
+  // Load more when we reach near the end
+  const loadMore = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage()
+    }
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage])
+
+  // Create virtualizer
+  const virtualizer = useWindowVirtualizer({
+    count: hasNextPage ? allTweets.length + 1 : allTweets.length,
+    estimateSize: () => 200, // Estimated tweet height
+    overscan: 5,
+  })
+
+  // Get virtual items
+  const items = virtualizer.getVirtualItems()
+
+  // Load more when scrolling near the end
+  useEffect(() => {
+    const [lastItem] = [...items].reverse()
+    
+    if (!lastItem) return
+    
+    // More conservative loading - only load when we're at the very last item
+    if (
+      lastItem.index >= allTweets.length - 1 &&
+      hasNextPage &&
+      !isFetchingNextPage
+    ) {
+      loadMore()
+    }
+  }, [items, allTweets.length, hasNextPage, isFetchingNextPage, loadMore])
 
   if (isLoading) {
     return (
@@ -44,19 +96,58 @@ export default function Bookmarks() {
         <div className="flex items-center space-x-3">
           <div>
             <h1 className="text-xl font-bold text-foreground">Bookmarks</h1>
-            <p className="text-sm text-muted-foreground">
-              {bookmarkedTweets?.length === 0 
-                ? 'No bookmarks yet'
-                : `${bookmarkedTweets?.length} ${bookmarkedTweets?.length === 1 ? 'bookmark' : 'bookmarks'}`
-              }
-            </p>
           </div>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="divide-y divide-border">
-        {bookmarkedTweets?.length === 0 ? (
+      {/* Virtual Timeline */}
+      <div ref={parentRef}>
+        <div
+          style={{
+            height: virtualizer.getTotalSize(),
+            width: '100%',
+            position: 'relative',
+          }}
+        >
+          {items.map((virtualItem) => {
+            const isLoaderRow = virtualItem.index > allTweets.length - 1
+            const tweet = allTweets[virtualItem.index]
+
+            return (
+              <div
+                key={virtualItem.key}
+                data-index={virtualItem.index}
+                ref={(node) => virtualizer.measureElement(node)}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  transform: `translateY(${virtualItem.start}px)`,
+                }}
+              >
+                {isLoaderRow ? (
+                  hasNextPage ? (
+                    <div className="flex justify-center items-center py-8">
+                      <Loader />
+                    </div>
+                  ) : (
+                    <div className="p-8 text-center text-muted-foreground">
+                      <p>You've reached the end of your bookmarks!</p>
+                    </div>
+                  )
+                ) : (
+                  <div className="hover:bg-muted/30 transition-colors border-b border-border">
+                    <TweetCard key={tweet.id} tweet={tweet} />
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Empty state for when there are no bookmarks */}
+        {allTweets.length === 0 && !isLoading && (
           <div className="p-6 text-center">
             <div className="flex flex-col items-center space-y-4 py-12">
               <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center">
@@ -70,12 +161,6 @@ export default function Bookmarks() {
               </div>
             </div>
           </div>
-        ) : (
-          bookmarkedTweets?.map((tweet) => (
-            <div key={tweet.id} className="hover:bg-muted/30 transition-colors">
-              <TweetCard tweet={tweet} />
-            </div>
-          ))
         )}
       </div>
     </div>

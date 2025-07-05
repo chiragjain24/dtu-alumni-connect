@@ -617,11 +617,21 @@ const app = new Hono<{
   }
 })
 
-// GET /api/tweets/bookmarks - Get user bookmarks
-.get('/bookmarks', requireAuth, async (c) => {
+// GET /api/tweets/bookmarks - Get user bookmarks with pagination
+.get('/bookmarks', requireAuth, zValidator('query', infiniteQuerySchema), async (c) => {
   const currentUser = c.get('user');
+  const { cursor, limit } = c.req.valid('query');
+  const safeLimit = parseInt(limit, 10);
   
   try {
+    // Build where conditions
+    const whereConditions = cursor
+      ? and(
+          eq(bookmarks.userId, currentUser!.id),
+          lt(bookmarks.createdAt, new Date(cursor))
+        )
+      : eq(bookmarks.userId, currentUser!.id);
+
     const bookmarkedTweets = await db
       .select({
         id: tweets.id,
@@ -642,6 +652,7 @@ const app = new Hono<{
         isLikedByUser: sql<boolean>`CASE WHEN ${likes.userId} IS NOT NULL THEN true ELSE false END`,
         isRetweetedByUser: sql<boolean>`CASE WHEN ${retweets.userId} IS NOT NULL THEN true ELSE false END`,
         isBookmarkedByUser: sql<boolean>`true`, // Always true since we're filtering by bookmarks,
+        bookmarkCreatedAt: bookmarks.createdAt,
       })
       .from(bookmarks)
       .innerJoin(tweets, eq(bookmarks.tweetId, tweets.id))
@@ -654,11 +665,26 @@ const app = new Hono<{
         eq(retweets.tweetId, tweets.id),
         eq(retweets.userId, currentUser!.id)
       ))
-      .where(eq(bookmarks.userId, currentUser!.id))
+      .where(whereConditions)
       .orderBy(desc(bookmarks.createdAt))
-      .limit(100);
+      .limit(safeLimit + 1); // Fetch one extra to determine if there are more
 
-    return c.json({ tweets: bookmarkedTweets });
+    // Check if there are more bookmarks
+    const hasMore = bookmarkedTweets.length > safeLimit;
+    const tweets_data = hasMore ? bookmarkedTweets.slice(0, safeLimit) : bookmarkedTweets;
+    
+    // Get the next cursor (last bookmark's createdAt) - only if we have tweets AND there are more
+    let nextCursor = null;
+    if (tweets_data.length > 0 && hasMore) {
+      // Use the last bookmark's timestamp as cursor
+      nextCursor = tweets_data[tweets_data.length - 1].bookmarkCreatedAt.toISOString();
+    }
+
+    return c.json({ 
+      tweets: tweets_data,
+      nextCursor,
+      hasMore
+    });
   } catch (error) {
     console.error('Error fetching bookmarks:', error);
     throw new HTTPException(500, { message: 'Failed to fetch bookmarks' });

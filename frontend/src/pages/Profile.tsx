@@ -1,5 +1,4 @@
-import { useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { Calendar, GraduationCap, Building, LinkIcon, Edit, Users} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { BackButton } from '@/components/others/back-button'
@@ -15,11 +14,21 @@ import Loader from '@/components/loader'
 export default function Profile() {
   const navigate = useNavigate()
   const { username } = useParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { data: myProfile, isPending: myProfilePending } = useGetMyProfile(!username)
   const { data: userProfile, isPending: userProfilePending } = useGetUserProfile(username || '')
-  const [activeTab, setActiveTab] = useState<'tweets' | 'replies' | 'media' | 'likes'>('tweets')
+  
+  // Get tab from URL query parameter, default to 'tweets'
+  const activeTab = (searchParams.get('tab') as 'tweets' | 'replies' | 'media' | 'likes') || 'tweets'
 
   const isMyProfile = !username || username === myProfile?.user.username
+
+  // Function to handle tab changes
+  const handleTabChange = (tab: 'tweets' | 'replies' | 'media' | 'likes') => {
+    const newSearchParams = new URLSearchParams(searchParams)
+    newSearchParams.set('tab', tab)
+    setSearchParams(newSearchParams)
+  }
 
   // Determine which profile to show
   const profile = isMyProfile ? myProfile : userProfile
@@ -163,7 +172,7 @@ export default function Profile() {
           {(['tweets', 'replies', 'media', 'likes'] as const).map((tab) => (
             <button
               key={tab}
-              onClick={() => setActiveTab(tab)}
+              onClick={() => handleTabChange(tab)}
               className={`flex-1 py-4 text-center font-medium capitalize transition-colors ${
                 activeTab === tab
                   ? 'text-foreground border-b-2 border-primary'

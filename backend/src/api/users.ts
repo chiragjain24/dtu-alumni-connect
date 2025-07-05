@@ -28,7 +28,7 @@ const infiniteQuerySchema = z.object({
   cursor: z.string().optional(),
   limit: z.string().refine((val) => {
     const num = parseInt(val, 10);
-    return !isNaN(num) && num >= 0 && num <= 50;
+    return !isNaN(num) && num >= 5 && num <= 50;
   }, {
     message: "Limit must be a number between 5 and 50"
   }),

@@ -270,18 +270,23 @@ export function useTweet(id: string) {
   });
 }
 
-// Bookmarked tweets query
-export function useBookmarkedTweets() {
-  return useQuery({
+// Bookmarked tweets query with infinite scroll
+export function useBookmarkedTweetsInfinite() {
+  return useInfiniteQuery({
     queryKey: ['tweets', 'bookmarks'],
-    queryFn: async () => {
-      const response = await api.tweets.bookmarks.$get();
+    queryFn: async ({ pageParam }: { pageParam?: string }) => {
+      const response = await api.tweets.bookmarks.$get({
+        query: { limit: '40', cursor: pageParam }
+      });
+      
       if (!response.ok) {
         throw new Error('Failed to fetch bookmarked tweets');
       }
-      const data = await response.json();
-      return data.tweets;
+      
+      return response.json();
     },
+    getNextPageParam: (lastPage: { nextCursor: string | null; hasMore: boolean; tweets: Tweet[] }) => lastPage.nextCursor,
+    initialPageParam: undefined,
     refetchOnWindowFocus: false,
     refetchInterval: 300000, // 5 minutes
     staleTime: 30000, // 30 seconds
