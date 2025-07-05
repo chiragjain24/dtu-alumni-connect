@@ -51,9 +51,19 @@ const LeftSidebar = () => {
     { icon: Settings, label: 'Settings', path: '/settings', isActive: location.pathname === '/settings' },
   ]
 
-  // Mobile navigation items (limited to 4 main items + more menu)
-  const mobileNavItems = navigationItems.slice(0, 4) // Home, Jobs, Explore, Notifications
-  const mobileMoreItems = navigationItems.slice(4) // Messages, Bookmarks, Profile, Settings
+  const mobileNavItems = [
+    { icon: Home, label: 'Home', path: '/', isActive: location.pathname === '/' },
+    { icon: Briefcase, label: 'Jobs', path: '/jobs', isActive: location.pathname === '/jobs' },
+    { icon: Bell, label: 'Notifications', path: '/notifications', isActive: location.pathname === '/notifications' },
+    { icon: User, label: 'Profile', path: '/profile', isActive: location.pathname.startsWith('/profile') },
+
+  ]
+  const mobileMoreItems = [
+    { icon: Search, label: 'Explore', path: '/explore', isActive: location.pathname === '/explore' },
+    { icon: Mail, label: 'Messages', path: '/messages', isActive: location.pathname === '/messages' },
+    { icon: Bookmark, label: 'Bookmarks', path: '/bookmarks', isActive: location.pathname === '/bookmarks' },
+    { icon: Settings, label: 'Settings', path: '/settings', isActive: location.pathname === '/settings' },
+  ]
 
   return (
     <>

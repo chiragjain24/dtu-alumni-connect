@@ -3,7 +3,6 @@ import AuthGuard from './components/AuthGuard'
 import Login from './pages/Login'
 import ProfileSetup from './pages/ProfileSetup'
 import Home from './pages/Home'
-import Explore from './pages/Explore'
 import Jobs from './pages/Jobs'
 import Profile from './pages/Profile'
 import Settings from './pages/Settings'
@@ -62,7 +61,7 @@ function RoutesHandler() {
           element={
             <AuthGuard>
               <RootLayout>
-                <Explore />
+              <PlaceholderPage title="Explore" />
               </RootLayout>
             </AuthGuard>
           } 
