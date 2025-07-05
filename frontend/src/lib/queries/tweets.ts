@@ -53,8 +53,40 @@ function updateTweetAcrossAllCaches(
     
     let updatedData;
     
-    // Handle Infinite Query (timeline)
-    if (currentData.pages && Array.isArray(currentData.pages)) {
+    // Handle Infinite Query with User Replies Structure (user replies timeline)
+    if (currentData?.pages?.[0]?.tweets?.[0]?.tweet) {
+      updatedData = {
+        ...currentData,
+        pages: currentData.pages.map((page: any) => ({
+          ...page,
+          tweets: page.tweets.map((item: any) => {
+            if (item.tweet.id === tweetId) {
+              return {
+                ...item,
+                tweet: updater(item.tweet)
+              };
+            }
+            // Check parent tweets
+            if (item.parentTweets.some((t: Tweet) => t.id === tweetId)) {
+              return {
+                ...item,
+                parentTweets: item.parentTweets.map((t: Tweet) => t.id === tweetId ? updater(t) : t)
+              };
+            }
+            // Check nested replies
+            if (item.replies && item.replies.length > 0) {
+              return {
+                ...item,
+                replies: updateNestedReplies(item.replies)
+              };
+            }
+            return item;
+          })
+        }))
+      };
+    }
+    // Handle Infinite Query with Regular Tweet Structure (timeline)
+    else if (currentData.pages && Array.isArray(currentData.pages)) {
       updatedData = {
         ...currentData,
         pages: currentData.pages.map((page: any) => ({
@@ -238,63 +270,6 @@ export function useTweet(id: string) {
   });
 }
 
-// User tweets query
-export function useUserTweets(userId: string) {
-  return useQuery({
-    queryKey: ['tweets', 'user', userId],
-    queryFn: async () => {
-      const response = await api.users[':id'].tweets.$get({ param: { id: userId } });
-      if (!response.ok) {
-        throw new Error('Failed to fetch user tweets');
-      }
-      const data = await response.json();
-      return data.tweets;
-    },
-    enabled: !!userId,
-    refetchOnWindowFocus: false,
-    refetchInterval: 300000, // 5 minutes
-    staleTime: 10000, // 10 seconds
-  });
-}
-
-// User liked tweets query
-export function useUserLikedTweets(userId: string, enabled: boolean = true) {
-  return useQuery({
-    queryKey: ['tweets', 'user', 'likes', userId],
-    queryFn: async () => {
-      const response = await api.users[':id'].likes.$get({ param: { id: userId } });
-      if (!response.ok) {
-        throw new Error('Failed to fetch user liked tweets');
-      }
-      const data = await response.json();
-      return data.tweets;
-    },
-    enabled: !!userId && enabled,
-    refetchOnWindowFocus: false,
-    refetchInterval: 300000, // 5 minutes
-    staleTime: 10000, // 10 seconds
-  });
-}
-
-// User replies query
-export function useUserReplies(userId: string, enabled: boolean = true) {
-  return useQuery({
-    queryKey: ['tweets', 'user', 'replies', userId],
-    queryFn: async () => {
-      const response = await api.users[':id'].replies.$get({ param: { id: userId } });
-      if (!response.ok) {
-        throw new Error('Failed to fetch user replies');
-      }
-      const data = await response.json();
-      return data.replies;
-    },
-    enabled: !!userId && enabled,
-    refetchOnWindowFocus: false,
-    refetchInterval: 300000, // 5 minutes
-    staleTime: 10000, // 10 seconds
-  });
-}
-
 // Bookmarked tweets query
 export function useBookmarkedTweets() {
   return useQuery({
@@ -380,8 +355,33 @@ export function useDeleteTweet() {
         previousData[keyString] = currentData;
         cacheKeys.push(queryKey);
         
-        // Handle Infinite Query (timeline)
-        if (currentData.pages && Array.isArray(currentData.pages)) {
+        // Handle Infinite Query with User Replies Structure (user replies timeline)
+        if (currentData?.pages?.[0]?.tweets?.[0]?.tweet) {
+          const updatedData = {
+            ...currentData,
+            pages: currentData.pages.map((page: any) => ({
+              ...page,
+              tweets: page.tweets
+                .filter((item: any) => {
+                  // Remove the entire item if the main tweet is being deleted
+                  return item.tweet.id !== tweet.id;
+                })
+                .map((item: any) => {
+                  // If any parent tweet is being deleted, remove it from parentTweets
+                  if (item.parentTweets.some((t: Tweet) => t.id === tweet.id)) {
+                    return {
+                      ...item,
+                      parentTweets: item.parentTweets.filter((t: Tweet) => t.id !== tweet.id)
+                    };
+                  }
+                  return item;
+                })
+            }))
+          };
+          queryClient.setQueryData(queryKey, updatedData);
+        }
+        // Handle Infinite Query with Regular Tweet Structure (timeline)
+        else if (currentData.pages && Array.isArray(currentData.pages)) {
           const updatedData = {
             ...currentData,
             pages: currentData.pages.map((page: any) => ({
@@ -389,25 +389,6 @@ export function useDeleteTweet() {
               tweets: page.tweets.filter((t: Tweet) => t.id !== tweet.id)
             }))
           };
-          queryClient.setQueryData(queryKey, updatedData);
-        }
-        // Handle Array of Tweet + parentTweets + replies (user replies structure)
-        else if (Array.isArray(currentData) && currentData.length > 0 && currentData[0].tweet && currentData[0].parentTweets && currentData[0].replies) {
-          const updatedData = currentData
-            .filter((item: any) => {
-              // Remove the entire item if the main tweet is being deleted
-              return item.tweet.id !== tweet.id;
-            })
-            .map((item: any) => {
-              // If any parent tweet is being deleted, remove it from parentTweets
-              if (item.parentTweets.some((t: Tweet) => t.id === tweet.id)) {
-                return {
-                  ...item,
-                  parentTweets: item.parentTweets.filter((t: Tweet) => t.id !== tweet.id)
-                };
-              }
-              return item;
-            });
           queryClient.setQueryData(queryKey, updatedData);
         }
         // Handle Array of Tweets (legacy)

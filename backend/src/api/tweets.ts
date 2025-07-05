@@ -28,7 +28,7 @@ const tweetParamsSchema = z.object({
   id: z.string(),
 });
 
-const timelineQuerySchema = z.object({
+const infiniteQuerySchema = z.object({
   cursor: z.string().optional(),
   limit: z.string().refine((val) => {
     const num = parseInt(val, 10);
@@ -55,7 +55,7 @@ const app = new Hono<{
   }>()
 
 // GET /api/tweets/timeline - Get timeline tweets with cursor-based pagination
-.get('/timeline', requireAuth, zValidator('query', timelineQuerySchema), async (c) => {
+.get('/timeline', requireAuth, zValidator('query', infiniteQuerySchema), async (c) => {
   const currentUser = c.get('user');
   const { cursor, limit } = c.req.valid('query');
   const safeLimit = parseInt(limit, 10);
