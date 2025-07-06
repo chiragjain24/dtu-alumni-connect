@@ -8,6 +8,7 @@ import Profile from './pages/Profile'
 import Settings from './pages/Settings'
 import TweetDetail from './pages/TweetDetail'
 import Bookmarks from './pages/Bookmarks'
+import Notifications from './pages/Notifications'
 import RootLayout from './components/layout/root-layout'
 
 // Placeholder components for Phase 2
@@ -72,7 +73,7 @@ function RoutesHandler() {
           element={
             <AuthGuard>
               <RootLayout>
-                <PlaceholderPage title="Notifications" />
+                <Notifications />
               </RootLayout>
             </AuthGuard>
           } 

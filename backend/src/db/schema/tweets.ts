@@ -51,6 +51,22 @@ export const follows = pgTable("follows", {
   createdAt: timestamp('created_at').$defaultFn(() => new Date()).notNull(),
 });
 
+export const notifications = pgTable("notifications", {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }), // User who receives the notification
+  type: text('type').notNull(), // 'like', 'retweet', 'reply', 'follow', 'mention'
+  actorId: text('actor_id').notNull().references(() => user.id, { onDelete: 'cascade' }), // User who performed the action
+  targetType: text('target_type'), // 'tweet', 'user' - helps identify what targetId refers to
+  targetId: text('target_id'), // ID of the target (tweet ID for likes/retweets/replies, user ID for follows)
+  metadata: jsonb('metadata').$type<{
+    tweetContent?: string; // For tweet-related notifications
+    tweetAuthor?: string; // For reply notifications
+    [key: string]: any; // Additional context
+  }>(),
+  isRead: boolean('is_read').$defaultFn(() => false).notNull(),
+  createdAt: timestamp('created_at').$defaultFn(() => new Date()).notNull(),
+});
+
 // Relations
 export const tweetsRelations = relations(tweets, ({ one, many }) => ({
   author: one(user, {
@@ -124,6 +140,23 @@ export const followsRelations = relations(follows, ({ one }) => ({
   }),
 }));
 
+export const notificationsRelations = relations(notifications, ({ one }) => ({
+  user: one(user, {
+    fields: [notifications.userId],
+    references: [user.id],
+    relationName: "notifications_received",
+  }),
+  actor: one(user, {
+    fields: [notifications.actorId],
+    references: [user.id],
+    relationName: "notifications_created",
+  }),
+  targetTweet: one(tweets, {
+    fields: [notifications.targetId],
+    references: [tweets.id],
+  }),
+}));
+
 export const userRelations = relations(user, ({ many }) => ({
   tweets: many(tweets),
   likes: many(likes),
@@ -134,5 +167,11 @@ export const userRelations = relations(user, ({ many }) => ({
   }),
   following: many(follows, {
     relationName: "follower",
+  }),
+  notificationsReceived: many(notifications, {
+    relationName: "notifications_received",
+  }),
+  notificationsCreated: many(notifications, {
+    relationName: "notifications_created",
   }),
 })); 

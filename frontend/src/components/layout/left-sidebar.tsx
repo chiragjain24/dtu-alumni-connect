@@ -23,10 +23,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { TweetComposerModal } from '@/components/tweets/tweet-composer-modal'
+import { useUnreadNotificationsCount } from '@/lib/queries/notifications'
 
 const LeftSidebar = () => {
   const location = useLocation()
   const [isTweetModalOpen, setIsTweetModalOpen] = useState(false)
+  const { data: unreadCount } = useUnreadNotificationsCount()
 
   const handleSignOut = async () => {
     try {
@@ -92,7 +94,14 @@ const LeftSidebar = () => {
                       item.isActive ? 'font-bold' : ''
                     }`}
                   >
-                    <Icon className={`w-6 h-6 ${item.isActive ? 'text-primary' : 'text-muted-foreground'}`} />
+                    <div className="relative">
+                      <Icon className={`w-6 h-6 ${item.isActive ? 'text-primary' : 'text-muted-foreground'}`} />
+                      {item.label === 'Notifications' && unreadCount && unreadCount.count > 0 && (
+                        <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                          {unreadCount.count > 99 ? '99+' : unreadCount.count}
+                        </div>
+                      )}
+                    </div>
                     <span className={`hidden lg:block ${item.isActive ? 'text-primary' : 'text-foreground'}`}>
                       {item.label}
                     </span>
@@ -144,7 +153,14 @@ const LeftSidebar = () => {
                   item.isActive ? 'text-primary' : 'text-muted-foreground'
                 }`}
               >
-                <Icon className={`w-6 h-6 mb-1 ${item.isActive ? 'text-primary' : 'text-muted-foreground'}`} />
+                <div className="relative">
+                  <Icon className={`w-6 h-6 mb-1 ${item.isActive ? 'text-primary' : 'text-muted-foreground'}`} />
+                  {item.label === 'Notifications' && unreadCount && unreadCount.count > 0 && (
+                    <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                      {unreadCount.count > 9 ? '9+' : unreadCount.count}
+                    </div>
+                  )}
+                </div>
                 <span className={`text-xs ${item.isActive ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
                   {item.label}
                 </span>

@@ -4,6 +4,7 @@ import { expensesRoute } from './api/expenses'
 import { usersRoute } from './api/users'
 import { tweetsRoute } from './api/tweets'
 import { uploadthingRoute } from './api/uploadthing'
+import { notificationsRoute } from './api/notifications'
 import { cors } from 'hono/cors'
 import { auth } from './lib/auth'
 import { HTTPException } from 'hono/http-exception'
@@ -56,6 +57,7 @@ const apiRoutes = app
   .route('/expenses', expensesRoute)
   .route('/users', usersRoute)
   .route('/tweets', tweetsRoute)
+  .route('/notifications', notificationsRoute)
   .route('/uploadthing', uploadthingRoute)
 
 export default app

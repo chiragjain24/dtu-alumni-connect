@@ -27,3 +27,26 @@ export interface Tweet {
     isBookmarkedByUser?: boolean;
     replies?: Tweet[]; // For nested thread structure
 }
+
+interface NotificationMetadata {
+    tweetContent?: string;
+    tweetAuthor?: string;
+    [key: string]: any;
+}
+
+export interface Notification {
+    id: string;
+    userId: string;
+    type: string;
+    actorId: string;
+    targetId: string | null;
+    targetType: string | null;
+    targetTweet?: Tweet | null;
+    metadata: NotificationMetadata | null;
+    isRead: boolean;
+    createdAt: string;
+    // Populated from relations
+    actorName?: string | null;
+    actorUsername?: string | null;
+    actorImage?: string | null;
+}

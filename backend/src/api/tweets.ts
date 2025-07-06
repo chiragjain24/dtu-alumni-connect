@@ -8,6 +8,7 @@ import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
 import { type Tweet, type TweetWithTreeMetadata } from '../types/types';
 import { deleteUploadThingFiles } from '../lib/uploadthing-utils';
+import { createNotification } from './notifications';
 
 // Validation schemas
 const mediaItemSchema = z.object({
@@ -136,6 +137,7 @@ const app = new Hono<{
   const currentUser = c.get('user');
   const { content, mediaItems, parentTweetId } = c.req.valid('json');
 
+  let parentTweetAuthorId = null;
   try {
     // If it's a reply, verify parent exists and increment reply count  
     if (parentTweetId) {
@@ -146,11 +148,13 @@ const app = new Hono<{
           updatedAt: new Date()
         })
         .where(eq(tweets.id, parentTweetId))
-        .returning({ id: tweets.id });
+        .returning({ id: tweets.id, authorId: tweets.authorId });
 
       if (!updatedParent) {
         throw new HTTPException(404, { message: 'Parent tweet not found' });
       }
+
+      parentTweetAuthorId = updatedParent.authorId;
     }
 
     // Insert new tweet
@@ -163,6 +167,21 @@ const app = new Hono<{
         parentTweetId,
       })
       .returning();
+
+    // Create notification for reply
+    if (parentTweetId && parentTweetAuthorId) {
+      await createNotification({
+        actorId: currentUser!.id,
+        type: 'reply',
+        userId: parentTweetAuthorId,
+        targetType: 'tweet',
+        targetId: newTweet.id,
+        metadata: { 
+          tweetContent: content.substring(0, 100),
+          tweetAuthor: currentUser!.name || currentUser!.username!
+        }
+      });
+    }
 
     // Build optimistic response with current user data (avoid extra DB call)
     const tweetResponse = {
