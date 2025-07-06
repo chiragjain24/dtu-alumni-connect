@@ -80,11 +80,11 @@ export const auth = betterAuth({
         }),
     },
 
-    // advanced:{
-    //     defaultCookieAttributes:{
-    //         secure: true,
-    //         sameSite: "none",
-    //         httpOnly: true,
-    //     }
-    // }
+    advanced:{
+        defaultCookieAttributes:{
+            secure: true,
+            sameSite: "none",
+            httpOnly: true,
+        }
+    }
 });
