@@ -3,6 +3,7 @@ import { useWindowVirtualizer } from '@tanstack/react-virtual';
 import { useNotificationsInfinite } from '@/lib/queries/notifications';
 import { NotificationItem } from './notification-item';
 import Loader from '@/components/loader';
+import { Bell } from 'lucide-react';
 
 export function NotificationsTimeline() {
 
@@ -81,31 +82,13 @@ export function NotificationsTimeline() {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
         <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
-          <svg
-            className="w-8 h-8 text-muted-foreground"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 17h5l-5 5v-5z"
-            />
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 12l2 2 4-4"
-            />
-          </svg>
+          <Bell className="w-8 h-8 text-muted-foreground" />
         </div>
         <h2 className="text-xl font-bold text-foreground mb-2">
           No notifications yet
         </h2>
         <p className="text-muted-foreground max-w-sm">
-          When someone likes, retweets, or replies to your tweets, you'll see it here.
+          When someone likes or replies to your tweets, you'll see it here.
         </p>
       </div>
     );

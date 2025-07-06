@@ -50,7 +50,7 @@ export const auth = betterAuth({
                     const userEmail = newSession.user.email;
                     
                     // Extract username from email (part before @)
-                    let proposedUsername = userEmail.split('@')[0];
+                    let proposedUsername = userEmail.split('@')[0].slice(0, 15);
                     
                     // Check if this username is already taken
                     const usernameExists = await db
@@ -79,12 +79,12 @@ export const auth = betterAuth({
             }
         }),
     },
-    advanced:{
-        defaultCookieAttributes:{
-            secure: true,
-            sameSite: "none",
-            httpOnly: true,
-        }
-    }
+
+    // advanced:{
+    //     defaultCookieAttributes:{
+    //         secure: true,
+    //         sameSite: "none",
+    //         httpOnly: true,
+    //     }
+    // }
 });
-// type Session = typeof auth.$Infer.Session
