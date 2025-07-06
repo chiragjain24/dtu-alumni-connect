@@ -39,7 +39,7 @@ export interface Notification {
     userId: string;
     type: string;
     actorId: string;
-    targetId: string | null;
+    targetTweetId: string | null;
     targetType: string | null;
     targetTweet?: Tweet | null;
     metadata: NotificationMetadata | null;

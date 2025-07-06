@@ -40,6 +40,49 @@ export function useUnreadNotificationsCount() {
   });
 }
 
+// Mark individual notification as read (optimistic update only)
+export function useMarkNotificationAsRead() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (notificationId: string) => {
+      // No backend call - this is purely optimistic
+      return { id: notificationId };
+    },
+    onMutate: async (notificationId: string) => {
+      // Check if queries are already in progress
+      const notificationsState = queryClient.getQueryState(['notifications']);
+      if (notificationsState?.fetchStatus === 'fetching') {
+        return;
+      }
+
+      const previousNotifications = queryClient.getQueryData(['notifications']);
+      queryClient.setQueryData(['notifications'], (old: any) => {
+        if (!old) return old;
+        
+        return {
+          ...old,
+          pages: old.pages.map((page: any) => ({
+            ...page,
+            notifications: page.notifications.map((notification: any) => 
+              notification.id === notificationId 
+                ? { ...notification, isRead: true }
+                : notification
+            )
+          }))
+        };
+      });
+
+      return { previousNotifications };
+    },
+    onError: (_, __, context) => {
+      if (context?.previousNotifications) {
+        queryClient.setQueryData(['notifications'], context.previousNotifications);
+      }
+    },
+  });
+}
+
 // Mark all notifications as read
 export function useMarkAllNotificationsAsRead() {
   const queryClient = useQueryClient();
@@ -53,23 +96,6 @@ export function useMarkAllNotificationsAsRead() {
       return response.json();
     },
     onSuccess: () => {
-      // Update the notifications cache
-      queryClient.setQueryData(['notifications'], (oldData: any) => {
-        if (!oldData) return oldData;
-        
-        return {
-          ...oldData,
-          pages: oldData.pages.map((page: any) => ({
-            ...page,
-            notifications: page.notifications.map((notification: Notification) => ({
-              ...notification,
-              isRead: true,
-            })),
-          })),
-        };
-      });
-
-      // Update unread count to 0
       queryClient.setQueryData(['notifications', 'unread-count'], () => ({
         count: 0,
       }));

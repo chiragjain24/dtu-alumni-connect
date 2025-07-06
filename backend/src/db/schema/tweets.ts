@@ -56,8 +56,8 @@ export const notifications = pgTable("notifications", {
   userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }), // User who receives the notification
   type: text('type').notNull(), // 'like', 'retweet', 'reply', 'follow', 'mention'
   actorId: text('actor_id').notNull().references(() => user.id, { onDelete: 'cascade' }), // User who performed the action
-  targetType: text('target_type'), // 'tweet', 'user' - helps identify what targetId refers to
-  targetId: text('target_id'), // ID of the target (tweet ID for likes/retweets/replies, user ID for follows)
+  targetType: text('target_type'), // 'tweet', 'user' - helps identify what targetTweetId refers to
+  targetTweetId: text('target_tweet_id').references(() => tweets.id, { onDelete: 'cascade' }), // Optional: only set for tweet-related notifications (like, retweet, reply)
   metadata: jsonb('metadata').$type<{
     tweetContent?: string; // For tweet-related notifications
     tweetAuthor?: string; // For reply notifications
@@ -152,7 +152,7 @@ export const notificationsRelations = relations(notifications, ({ one }) => ({
     relationName: "notifications_created",
   }),
   targetTweet: one(tweets, {
-    fields: [notifications.targetId],
+    fields: [notifications.targetTweetId],
     references: [tweets.id],
   }),
 }));

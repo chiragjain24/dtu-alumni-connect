@@ -175,7 +175,7 @@ const app = new Hono<{
         type: 'reply',
         userId: parentTweetAuthorId,
         targetType: 'tweet',
-        targetId: newTweet.id,
+        targetTweetId: newTweet.id,
         metadata: { 
           tweetContent: content.substring(0, 100),
           tweetAuthor: currentUser!.name || currentUser!.username!

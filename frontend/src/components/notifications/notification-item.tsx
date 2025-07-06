@@ -3,12 +3,20 @@ import { Heart, Repeat2, MessageCircle, UserPlus, AtSign } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { Notification } from '@/types/types';
 import { Link } from 'react-router-dom';
+import { useMarkNotificationAsRead } from '@/lib/queries/notifications';
 
 interface NotificationItemProps {
   notification: Notification;
 }
 
 export function NotificationItem({ notification }: NotificationItemProps) {
+  const markAsRead = useMarkNotificationAsRead();
+
+  const handleClick = () => {
+    if (!notification.isRead) {
+      markAsRead.mutate(notification.id);
+    }
+  };
 
   const getNotificationIcon = () => {
     switch (notification.type) {
@@ -51,11 +59,11 @@ export function NotificationItem({ notification }: NotificationItemProps) {
       case 'like':
       case 'retweet':
       case 'reply':
-        return notification.targetId ? `/tweet/${notification.targetId}` : null;
+        return notification.targetTweetId ? `/tweet/${notification.targetTweetId}` : null;
       case 'follow':
         return notification.actorUsername ? `/profile/${notification.actorUsername}` : null;
       case 'mention':
-        return notification.targetId ? `/tweet/${notification.targetId}` : null;
+        return notification.targetTweetId ? `/tweet/${notification.targetTweetId}` : null;
       default:
         return null;
     }
@@ -67,6 +75,7 @@ export function NotificationItem({ notification }: NotificationItemProps) {
       className={`flex items-start space-x-3 p-4 border-b border-border hover:bg-accent/50 transition-colors cursor-pointer ${
         !notification.isRead ? 'bg-blue-50/50 dark:bg-blue-950/20' : ''
       }`}
+      onClick={handleClick}
     >
       {/* Notification Icon */}
       <div className="flex-shrink-0 mt-1">

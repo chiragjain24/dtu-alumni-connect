@@ -62,8 +62,8 @@ export const notificationsRoute = new Hono<{
         userId: notifications.userId,
         type: notifications.type,
         actorId: notifications.actorId,
-        targetId: notifications.targetId,
         targetType: notifications.targetType,
+        targetTweetId: notifications.targetTweetId,
         metadata: notifications.metadata,
         isRead: notifications.isRead,
         createdAt: notifications.createdAt,
@@ -147,14 +147,14 @@ export async function createNotification({
   type,
   userId,
   targetType,
-  targetId,
+  targetTweetId,
   metadata
 }: {
   actorId: string;
   type: 'like' | 'retweet' | 'reply' | 'follow' | 'mention';
   userId: string;
   targetType: 'tweet' | 'user';
-  targetId?: string;
+  targetTweetId?: string;
   metadata?: NotificationMetadata;
 }) {
   try {
@@ -170,8 +170,8 @@ export async function createNotification({
         userId,
         type,
         actorId,
-        targetId,
         targetType,
+        targetTweetId,
         metadata,
       })
       .returning();
