@@ -78,7 +78,7 @@ export async function onRequest(context) {
          console.log('🔀 Redirect URL fixed:', { original: value, fixed: redirectUrl });
          proxyResponse.headers.set(key, redirectUrl);
       } 
-      else if (key.toLowerCase() !== 'set-cookie') {
+      else {
         proxyResponse.headers.set(key, value);
       }
     }

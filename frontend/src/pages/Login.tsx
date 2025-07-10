@@ -50,9 +50,9 @@ export default function Login() {
             </svg>
             Continue with Google
           </Button>
-          <p className="text-sm text-muted-foreground text-center">
+          {/* <p className="text-sm text-muted-foreground text-center">
             Only DTU alumni with verified email addresses can join
-          </p>
+          </p> */}
         </CardContent>
       </Card>
     </div>
