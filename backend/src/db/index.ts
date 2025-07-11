@@ -3,10 +3,7 @@ import { config } from 'dotenv';
 import * as authSchema from './schema/auth';
 import * as tweetsSchema from './schema/tweets';
 
-// For local development
-if (typeof Bun !== 'undefined') {
-  config({ path: '.env.local' });
-}
+config({ path: '.env.local' });
 
 const schema = {
   ...authSchema,
